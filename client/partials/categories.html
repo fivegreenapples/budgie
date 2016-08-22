@@ -1,0 +1,90 @@
+
+<div ng-controller="categoriesCtrl" class="categories-container">
+	<div class="category-details-container">
+		<div class="column categories">
+			<div class="header">
+				Categories
+				<i ng-click="addCategory()" class="icon plus button"></i>
+			</div>
+			<div class="item-container">
+				<div ng-if="categories.length" class="spacer"></div>
+				<div class="item category" 
+				     ng-repeat-start="category in categories"
+				     ng-class="{active:activeCategory==category.name}"
+				     ng-click="chooseCategory($index)">
+					{{ category.name }}
+					<i class="icon popover" ng-click="showCategoryPopoverMenu($event)"></i>
+				</div>
+				<div ng-repeat-end class="spacer"></div>
+			</div>
+		</div>
+		<div class="column labels">
+			<div class="header">
+				Labels
+				<i ng-if="activeCategory" ng-click="addLabel()" class="icon plus button"></i>
+			</div>
+			<div class="item-container">
+				<div ng-if="activeCategory && categoryLabels[activeCategory].length" class="spacer"></div>
+				<div class="item label"
+				     ng-if="activeCategory"
+				     ng-repeat-start="label in categoryLabels[activeCategory]"
+				     ng-class="{active:activeLabel==label.name}"
+				     ng-click="chooseLabel($index)">
+					{{ label.name }}
+					<i class="icon popover" ng-click="showLabelPopoverMenu($event)"></i>
+				</div>
+				<div ng-repeat-end class="spacer"></div>
+			</div>
+		</div>
+		<div class="column details">
+			<div class="item-container">
+				<div class="header">
+					Budgets
+					<i ng-if="activeCategory && activeLabel" ng-click="addBudget()" class="icon plus button"></i>
+				</div>
+				<div>
+						<budget-graph budgets="lastYearBudgets(activeCategory, activeLabel)" year="year-1"></budget-graph>
+						<budget-graph amounts="lastYearAmounts(activeCategory, activeLabel)" year="year-1"></budget-graph>
+					<div ng-if="activeCategory && 
+					            activeLabel && 
+					            categoryDetails[activeCategory][activeLabel].budgets.length">
+						<div class="spacer"></div>
+						<budget-graph budgets="categoryDetails[activeCategory][activeLabel].budgets" year="year"></budget-graph>
+						<div class="item budget"
+						     ng-if="activeCategory && activeLabel"
+						     ng-repeat-start="budget in categoryDetails[activeCategory][activeLabel].budgets"
+						     ng-class="{active:activeBudgetIndex==$index}"
+						     ng-click="chooseBudget($index)">
+						     {{ budget | budgetDescription }}
+							<i class="icon popover" ng-click="showBudgetPopoverMenu($event)"></i>
+						</div>
+						<div ng-repeat-end class="spacer"></div>
+					</div>
+					<div ng-if="activeCategory && 
+					            activeLabel && 
+					            !categoryDetails[activeCategory][activeLabel].budgets.length">
+						<p>No budgets configured</p>
+					</div>
+				</div>
+				<div class="header">
+					Matchers
+					<i ng-if="activeCategory && activeLabel" ng-click="addMatcher()" class="icon plus button"></i>
+				</div>
+				<div ng-if="activeCategory && activeLabel && categoryDetails[activeCategory][activeLabel].matchers.length" class="spacer"></div>
+				<div>
+					<div class="item match"
+					     ng-if="activeCategory && activeLabel"
+					     ng-repeat-start="match in categoryDetails[activeCategory][activeLabel].matchers"
+					     ng-class="{active:activeMatcher==match}"
+					     ng-click="chooseMatcher($index)">
+						{{ matcherMapping[match.type] }} <span class="matchtext">{{ match.match }}</span>
+						<i class="icon popover"></i>
+					</div>
+					<div ng-repeat-end class="spacer"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</div>
+

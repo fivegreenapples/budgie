@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     x="0"
+     y="0"
+     width="742"
+     height="60"
+     viewBox="0, 0, 742, 60"
+     preserveAspectRatio="none">
+	
+	<g>
+
+		<g transform="translate(10,0)">
+			<g>
+				<rect ng-repeat="m in tags.weekdays track by $index" 
+				      ng-attr-x="{{m * 2}}" 
+				      y="0" 
+				      height="50" 
+				      width="2" 
+				      fill="#f9f9f9"></rect>
+			</g>
+			<g>
+				<rect ng-repeat="m in tags.weekenddays track by $index" 
+				      ng-attr-x="{{m * 2}}" 
+				      y="0" 
+				      height="50" 
+				      width="2" 
+				      fill="#efefef"></rect>
+			</g>
+			<g>
+				<rect ng-repeat="m in tags.months track by $index" 
+				      ng-attr-x="{{m * 2}}" 
+				      y="0" 
+				      height="60" 
+				      width="0.5" 
+				      fill="#999"></rect>
+			</g>
+
+			<g ng-attr-transform="translate(0,50) scale(1,-{{50/maxBarHeight}})">
+				<rect ng-repeat="v in vals track by $index" 
+				      ng-attr-x="{{(v.x * 2)-0.5}}" 
+				      y="0" 
+				      ng-attr-height="{{v.h}}" 
+				      width="3" 
+				      fill="#de2345"></rect>
+			</g>
+		</g>
+
+		<line x1="0" y1="49.5" x2="742" y2="49.5" stroke-width="0.5" stroke="#999" />
+
+	</g>
+</svg>
+
+ 

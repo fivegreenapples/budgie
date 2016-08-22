@@ -1,0 +1,2 @@
+<select ng-options="opt.value as opt.label for opt in days[month-1]" ng-model="day"></select>
+<select ng-options="opt.value as opt.label for opt in months" ng-model="month" ng-change="monthOnChange()"></select>

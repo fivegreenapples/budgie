@@ -1,0 +1,52 @@
+<div class="budget-page" ng-controller="budgetCtrl">
+
+	<div>
+		<h1>Budgets</h1>
+	</div>
+
+	<div class="budget-log">
+		<div class="log-body">
+
+<!-- 			<div ng-repeat="category in categories">
+				<div class="log-row" ng-repeat="label in categoryLabels[category.name]">
+					
+					<div class="item budget-label">
+						{{category.name}} {{label.name}}
+					</div>
+
+					<div class="item budget-total">
+						{{label.budgets | sumBudgets | currency: "£"}}
+					</div>
+
+					<div class="item budget-graph">
+						<budget-graph budgets="label.budgets" year="currentYear"></budget-graph>
+					</div>
+
+				</div>
+			</div>
+ -->
+
+ 	<p ng-repeat="desc in theBudgetDescriptions track by $index">{{ desc }}</p>
+ 	<br><Br>
+ 	<style>
+ 		.calmonth { width: 300px; height:200px; float:left; }
+ 		.calitem { font-size:0.8em; display:inline-block; width:40px; text-align:center; }
+ 		.calitem.hl { color:rebeccapurple; }
+ 	</style>
+ 			<div ng-repeat="month in MONTHS track by $index" class="calmonth">
+ 				<p> {{ month.name }} </p>
+				<div>
+<span class="calitem">M</span><span class="calitem">T</span><span class="calitem">W</span><span class="calitem">T</span><span class="calitem">F</span><span class="calitem">S</span><span class="calitem">S</span>
+				</div>
+				<div ng-repeat="week in month.weeks track by $index">
+					<span ng-repeat="day in week track by $index" class="calitem hl">{{ day!=="" ? (theBudgetValues[day]!==0 ? theBudgetValues[day]/100 : ".") : ""}}</span>
+				</div>
+			</div>
+<!-- 			<div ng-repeat="value in theBudgetValues track by $index">
+				{{ value.dateDesc }} {{ value.val/100 | currency: "£" }}
+			</div>
+ -->		</div>
+
+	</div>
+
+</div>

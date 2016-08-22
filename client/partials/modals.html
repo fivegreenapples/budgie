@@ -1,0 +1,88 @@
+<div class="modalbackground" ng-repeat-start="layer in modals" ng-class="{blurred:layer.type!='POPOVERMENU'}"></div>
+<div class="modaldetail" ng-repeat-end ng-click="layer.onBackgroundClick()">
+	<div ng-if="layer.type=='POPOVERMENU'" 
+	     class="popovermenu" 
+	     ng-style="{left:layer.left,top:layer.top}" 
+	     ng-click="$event.stopPropagation()">
+		<div class="menu-pointer"></div>
+		<div class="menu-container">
+			<div ng-repeat="item in layer.menuitems" 
+			     ng-click="$event.stopPropagation();layer.onItemClick(item)" 
+			     class="menuitem">
+				{{ item }}
+			</div>
+		</div>
+	</div>
+	<div ng-if="layer.type=='INPLACEEDIT'" 
+	     class="inplaceedit" 
+	     ng-style="{left:layer.left,top:layer.top,width:layer.width,height:layer.height}"
+	     ng-click="$event.stopPropagation()"
+	     ng-class="layer.class">
+		<input ng-model="layer.value" ng-keypress="layer.onKeyPress($event)" />
+	</div>
+	<div ng-if="layer.type=='ALERT'" 
+	     class="alert" 
+	     ng-click="$event.stopPropagation()">
+		<h1>{{ layer.title }}</h1>
+		<p>{{ layer.message }}</p>
+		<div class="button-container">
+			<span ng-repeat="but in layer.buttons.slice().reverse()" 
+			      class="button {{but.type}}"
+			      ng-click="layer.onButtonClick(but.label)">
+				{{ but.label }}
+			</span>
+		</div>
+	</div>
+	<div class="form-container" ng-if="layer.type=='FORM'">
+		<div class="form-header"></div>
+		<div class="form" 
+		     ng-click="$event.stopPropagation()">
+			<h1>{{ layer.title }}</h1>
+			<p>{{ layer.message }}</p>
+			<div class="item-container">
+				<div ng-repeat="item in layer.items" 
+				     class="item">
+					<span class="label">{{ item.label }}</span>
+					<span class="input" ng-switch="item.input.type">
+						<span class="label" ng-switch-when="LABEL">
+							{{ item.input.value }}
+						</span>
+						<span class="textbox" ng-switch-when="TEXTBOX">
+							<input placeholder="{{item.input.placeholder}}" ng-model="item.input.value">
+						</span>
+						<span class="currency" ng-switch-when="CURRENCY">
+							<currency-input model="item.input.value"></currency-input>
+						</span>
+						<span class="select" ng-switch-when="SELECT">
+							<select ng-options="opt.value as opt.label for opt in item.input.options" ng-model="item.input.value"></select>
+						</span>
+						<span class="doubleselect" ng-switch-when="DOUBLESELECT">
+							<select class="select-one" ng-options="opt.value as opt.label for opt in item.input.options" ng-model="item.input.value"></select>
+							<select class="select-two" ng-options="opt.value as opt.label for opt in item.input.options2[item.input.value]" ng-model="item.input.value2"></select>
+						</span>
+						<span class="date" ng-switch-when="DATE">
+							<date-selectors model="item.input.value"></date-selectors>
+						</span>
+						<span class="fileupload" ng-switch-when="FILEUPLOAD">
+							<file-upload model="item.input.value"></file-upload>
+						</span>
+					</span>
+					<span class="validation">{{ item.validation }}</span>
+				</div>
+			</div>
+			<div class="button-container">
+				<span ng-repeat="but in layer.buttons.slice().reverse()" 
+				      class="button {{but.type}}"
+				      ng-click="layer.onButtonClick(but.label)">
+					{{ but.label }}
+				</span>
+			</div>
+		</div>
+		<div class="form-footer"></div>
+	</div>
+	<div class="budget-form-container form-container" ng-if="layer.type=='BUDGETFORM'">
+		<div class="form-header"></div>
+		<div class="form" budget-form budget="layer.data" year="layer.year" save="layer.onSave" cancel="layer.onCancel"></div>
+		<div class="form-footer"></div>
+	</div>
+</div>

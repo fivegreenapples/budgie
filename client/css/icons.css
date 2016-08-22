@@ -1,0 +1,49 @@
+i.icon {
+	display:inline-block;
+	width: 1em;
+	height:1em;
+	background-size:contain;
+	background-repeat:no-repeat;
+	background-position:50% 50%;
+}
+i.icon.tiny {
+	width: 0.5em;
+	height:0.5em;
+}
+i.icon.small {
+	width: 0.71em;
+	height:0.71em;
+}
+i.icon.big {
+	width: 1.4em;
+	height:1.4em;
+}
+i.icon.huge {
+	width: 1.8em;
+	height:1.8em;
+}
+i.icon.enormous {
+	width: 2.5em;
+	height:2.5em;
+}
+i.icon.fixedsize {
+	width: 20px;
+	height:20px;
+}
+
+i.icon.button {
+	cursor:pointer;
+}
+
+i.icon.pencil {
+	background-image:url('../img/icons/Pencil.svg');
+}
+i.icon.popover {
+	background-image:url('../img/icons/Popover.svg');
+}
+i.icon.popover.active {
+	background-image:url('../img/icons/Popover Active.svg');
+}
+i.icon.plus {
+	background-image:url('../img/icons/Plus.svg');
+}

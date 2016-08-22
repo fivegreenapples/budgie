@@ -1,0 +1,363 @@
+Number.isFinite = Number.isFinite || function(value) {
+    return typeof value === "number" && isFinite(value);
+}
+Number.isInteger = Number.isInteger || function(value) {
+  return typeof value === "number" && 
+    isFinite(value) && 
+    Math.floor(value) === value;
+}
+Array.prototype.halfindex = function() {
+	return Math.ceil(this.length / 2)
+}
+
+App = angular.module('budgie', ['ui.router']);
+App.config([
+	"$stateProvider",
+	"$urlRouterProvider",
+	function($stateProvider, $urlRouterProvider) {
+		//
+		// For any unmatched url, redirect to /state1
+		$urlRouterProvider.otherwise("/transactions");
+		//
+		// Now set up the states
+		$stateProvider
+		.state('transactions', {
+			url: "/transactions",
+			templateUrl: "partials/transactions.html"
+		})
+		.state('categories', {
+			url: "/categories",
+			templateUrl: "partials/categories.html"
+		})
+		.state('categories.categorydetail', {
+			url: "/categories/:category",
+			templateUrl: "partials/categoryDetail.html"
+		})
+		.state('reports', {
+			url: "/reports",
+			templateUrl: "partials/reports.html"
+		})
+		.state('budget', {
+			url: "/budget",
+			templateUrl: "partials/budget.html"
+		})
+		.state('admin', {
+			url: "/admin",
+			templateUrl: "partials/admin.html"
+		})
+	}
+])
+App.run([
+	"$rootScope",
+	"$state",
+	function($rootScope, $state) {
+		$rootScope.$state = $state
+		$rootScope.modals = []
+	}
+])
+App.filter('dateformat', function() {
+  return function(input) {
+    return moment(input, "x").format('DD MMM YYYY')
+  };
+})
+QIFDATA = `!Type:Bank
+D31/03/2014
+PSAINSBURY'S 000000 CD 6867 
+T-137.03
+^
+D31/03/2014
+PSAINSBURYS PETROL CD 4449 
+T-88.94
+^
+D31/03/2014
+PSCREWFIX DIRECT CD 4449 
+T-40.78
+^
+D31/03/2014
+PDAWN REIMANN 
+T-806.67
+^
+D31/03/2014
+PTHIRD LIGHT LIMITE 
+T2639.50
+^
+D31/03/2014
+PM WELLS 
+T1298.00
+^
+D28/03/2014
+PAVIVA HEALTH 702V2V 
+T-40.77
+^
+D28/03/2014
+PORANGE HOME FS624419601-N2I5C0 
+T-32.62
+^
+D27/03/2014
+PABEL & COLE CD 6867 
+T-25.62
+^
+D27/03/2014
+PAmazon EU CD 6867 
+T-7.17
+^
+D27/03/2014
+PWWW.FABIAN4.CO.UK CD 4449 
+T-13.00
+^
+D27/03/2014
+PWWW.TAGADAB.COM CD 4431 
+T-11.99
+^
+D26/03/2014
+P000246 
+T-34.50
+^
+D25/03/2014
+PAmazon Digital Dwn CD 6867 
+T-13.52
+^
+D25/03/2014
+PLNK WEST SUFFOLK H CD 6867 25MAR14 ATM OWNER FEE 1.99 
+T-51.99
+^
+D25/03/2014
+PLNK TESCO HISTON E CD 4449 25MAR14 
+T-100.00
+^
+D25/03/2014
+PW SUFF HOSP SL WGS 
+T2505.42
+^
+D24/03/2014
+PSAINSBURY'S S/MKT CD 4449 
+T-77.25
+^
+D24/03/2014
+PWWW.BRITISHORIENTE CD 4449 
+T-24.00
+^
+D24/03/2014
+PGREENEKING VISITOR CD 6867 
+T-20.00
+^
+D24/03/2014
+PPBL CINEMA TKTS CD 6867 
+T-19.80
+^
+D24/03/2014
+PTHE LEAPING HARE CD 4431 
+T-40.00
+^
+D24/03/2014
+PDAIRY CREST LIMITE 122762990-46099475 
+T-22.40
+^
+D20/03/2014
+PABEL & COLE CD 6867 
+T-14.24
+^
+D19/03/2014
+PSAINSBURY'S S/MKT CD 6867 
+T-72.76
+^
+D19/03/2014
+PBEN HOLLAND 300000000113000924 19MAR14 10:05 
+T-292.64
+^
+D18/03/2014
+PSNAPFISH CD 6867 
+T-13.39
+^
+D18/03/2014
+PSNAPFISH CD 6867 
+T-8.98
+^
+D18/03/2014
+PWWW.NETFLIX.COM CD 6867 
+T-5.99
+^
+D18/03/2014
+PSNAPFISH CD 6867 
+T-1.49
+^
+D17/03/2014
+PSAINSBURY'S 000000 CD 4431 
+T-89.33
+^
+D17/03/2014
+PTHE ROOF BOX CO CD 4431 
+T-67.00
+^
+D17/03/2014
+PTOOLSTATION LTD CD 4431 
+T-52.40
+^
+D17/03/2014
+PSTREET LEVEL CD 4431 
+T-10.70
+^
+D17/03/2014
+PUNIQUECARMATS CD 4431 
+T-40.97
+^
+D17/03/2014
+PCAMBRIDGE B/SOC 7637050880 
+T-1302.94
+^
+D17/03/2014
+PST EDS - C TAX 850150904 
+T-213.00
+^
+D17/03/2014
+PANGLIAN WATER 142418144 
+T-44.00
+^
+D17/03/2014
+P833342473131-CHB 
+T81.20
+^
+D14/03/2014
+PESSO MALTHURST TOL CD 4431 
+T-91.85
+^
+D14/03/2014
+PADMIRAL INSURANCE CD 4431 
+T-86.31
+^
+D14/03/2014
+PNESPRESSO UK/INET CD 4431 
+T-67.04
+^
+D14/03/2014
+PB AND C MOTORS LIM CD 4431 
+T-15000.00
+^
+D13/03/2014
+PABEL & COLE CD 6867 
+T-14.24
+^
+D13/03/2014
+PESURE MOTOR CD 4431 
+T-337.28
+^
+D12/03/2014
+PE HOLLAND 302580 31240260 
+T9000.00
+^
+D11/03/2014
+PSAINSBURY'S S/MKT CD 6867 
+T-125.83
+^
+D11/03/2014
+PORANGE 946468771063809556 
+T-34.52
+^
+D11/03/2014
+PTESCO STORES-2889 CD 6867 
+T-9.89
+^
+D10/03/2014
+PB AND C MOTORS LIM CD 4431 
+T-645.00
+^
+D10/03/2014
+PESSO MALTHURST TOL CD 4431 
+T-50.42
+^
+D10/03/2014
+PBP 1000 GUINEAS CO CD 4431 
+T-50.92
+^
+D10/03/2014
+PNPOWER 000152440954 
+T-5.00
+^
+D10/03/2014
+PHOLLAND PM&CS   PP M&D        09MAR14 59193637139023000N 
+T6500.00
+^
+D07/03/2014
+PEE & T-MOBILE M98833608439284181 
+T-42.60
+^
+D07/03/2014
+PWAITROSE 140 CD 6867 
+T-29.27
+^
+D06/03/2014
+PRASPBERRY RASCALS CD 6867 
+T-26.50
+^
+D06/03/2014
+PPETS AT HOME LTD CD 6867 
+T-26.00
+^
+D06/03/2014
+PABEL & COLE CD 6867 
+T-22.21
+^
+D06/03/2014
+PWILLIAMS MINISTRY 
+T-100.00
+^
+D05/03/2014
+PBP ROWLEY MILE CON CD 4431 
+T-46.23
+^
+D05/03/2014
+PLOYD BUTTERMARKET 
+T8.32
+^
+D05/03/2014
+PLOYD BUTTERMARKET 
+T4.35
+^
+D04/03/2014
+PAmazon Digital Dwn CD 6867 
+T-2.99
+^
+D04/03/2014
+PMX5 PARTS CD 4431 
+T-22.35
+^
+D04/03/2014
+PBUSHEL CD 6867 
+T-28.55
+^
+D03/03/2014
+PSAINSBURY'S S/MKT CD 4431 
+T-89.94
+^
+D03/03/2014
+PAPPLE ITUNES STORE CD 4431 
+T-4.49
+^
+D03/03/2014
+PJOLLY BREWERS PUBL CD 4431 
+T-110.00
+^
+D03/03/2014
+PWWW.JUST EAT.CO.UK CD 4431 
+T-20.45
+^
+D03/03/2014
+PBOOTS REWARDSCHEME 127985918612 
+T-22.50
+^
+D03/03/2014
+PBOOTS REWARDSCHEME 127933418612 
+T-17.00
+^
+D03/03/2014
+P302580 31240260 
+T-500.00
+^
+D03/03/2014
+PSBY  BURY ST EDMDS CD 4431 01MAR14 
+T-100.00
+^
+D03/03/2014
+PLNK WEST SUFFOLK H CD 6867 01MAR14 ATM OWNER FEE 1.99 
+T-31.99
+^`;

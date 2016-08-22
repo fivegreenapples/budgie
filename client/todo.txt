@@ -1,0 +1,7 @@
+Add multi transactions manually
+Edit all visible, use save and next etc
+Edit individual
+Think about how to spot dupes
+Add a global filter.
+Add preset filters for uncategorised, unreconciled, dupes
+Think about add category/label/match at the point of editing transactions

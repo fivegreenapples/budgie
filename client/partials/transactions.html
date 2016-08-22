@@ -1,0 +1,60 @@
+<div ng-controller="transactionsCtrl"  class="transactions-page">
+
+	<div class="sub-header transactions">
+		<div class="item"
+		     ng-repeat="acc in accounts"
+		     ng-class="{active:$index == activeAccountIndex}"
+		     ng-click="$parent.activeAccountIndex=$index;refreshTransactions()">
+			{{acc.shortName}}
+		</div>
+		<div class="item addbutton">
+			<i class="icon plus" ng-click="addAccount()"></i>
+		</div>
+	</div>
+
+	<div>
+		<h1>{{accounts[activeAccountIndex].fullName}} <i class="fixedsize button icon popover" ng-click="showAccountPopover($event)"></i></h1>
+	</div>
+
+	<div class="transaction-log">
+		<div class="log-body">
+			<div class="log-row header-row">
+				<div class="item date">Date</div>
+				<div class="item description">Description</div>
+				<div class="item income">In</div>
+				<div class="item expense">Out</div>
+				<div class="item category">Category</div>
+			</div>
+			<div ng-repeat="t in accounts[activeAccountIndex].transactions track by t.id" ng-init="transIndex = $index">
+				<div class="log-row" ng-repeat="e in t.entries track by $index">
+					<div class="item date">
+						<span ng-if="$index==0">
+							{{ t.date | dateformat }}
+							<i class="icon small popover button" ng-click="showTransactionPopover($event, t.id, transIndex)"></i>
+						</span>
+					</div>
+					<div class="item description">
+						<span>{{e.description ? e.description : t.bankDescription}}</span>
+						<span class="additional-description" ng-if="e.description &amp;&amp; t.bankDescription">{{t.bankDescription}}</span>
+					</div>
+					<div class="item income">
+						{{e.amount>0 ? (e.amount/100 | currency : "£") : ""}}
+					</div>
+					<div class="item expense">
+						{{e.amount<=0 ? (-e.amount/100 | currency : "£") : ""}}
+					</div>
+					<div ng-if="e.categorisation" class="item category">
+						{{e.categorisation[0]}} - {{e.categorisation[1]}}
+					</div>
+					<div ng-if="!e.categorisation" class="item category">
+						{{t.autoCategorisation[0]}} - {{t.autoCategorisation[1]}}
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+
+	</div>
+
+</div>

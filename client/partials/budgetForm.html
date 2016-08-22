@@ -1,0 +1,187 @@
+<h1>{{ mode=="EDIT" ? "Configure a Budget Entry" : "Create a new Budget Entry" }}</h1>
+<p>Budgets represent your expected expenditure or income for a particular sub-category. You can configure multiple budgets against each sub-category, for example you can set up a weekly spend plus a few known one-offs.</p>
+<div class="item-container">
+	<div class="item">
+		<span class="label">Budget Type</span>
+		<span class="input">
+			<span class="select">
+				<select ng-options="opt.value as opt.label for opt in budgetTypes" ng-model="b.type" ng-change="validateType()"></select>
+			</span>
+		</span>
+		<span class="validation"></span>
+	</div>
+	<div ng-switch="b.type">
+		<div ng-switch-when="date">
+			<div class="item">
+				<span class="label">Date</span>
+				<span class="input">
+					<span class="doubleselect">
+						<day-month day="b.day" month="b.month" year="year"></day-month>
+					</span>
+				</span>
+				<span class="validation"></span>
+			</div>
+		</div>
+		<div ng-switch-when="daily">
+			<div class="item">
+				<span class="label">Starts on</span>
+				<span class="input">
+					<span class="doubleselect">
+						<day-month day="b.startday" month="b.startmonth" year="year"></day-month>
+					</span>
+				</span>
+				<span class="validation"></span>
+			</div>
+			<div class="item">
+				<span class="label">Ends on</span>
+				<span class="input">
+					<span class="doubleselect">
+						<day-month day="b.endday" month="b.endmonth" year="year"></day-month>
+					</span>
+				</span>
+				<span class="validation"></span>
+			</div>
+			<div class="item">
+				<span class="label">Every how many days</span>
+				<span class="input">
+					<span class="textbox">
+						<input ng-model="b.every">
+					</span>
+				</span>
+				<span class="validation"></span>
+			</div>
+		</div>
+		<div ng-switch-when="weekly">
+			<div class="item">
+				<span class="label">Starts on</span>
+				<span class="input">
+					<span class="doubleselect">
+						<day-month day="b.startday" month="b.startmonth" year="year"></day-month>
+					</span>
+				</span>
+				<span class="validation"></span>
+			</div>
+			<div class="item">
+				<span class="label">Ends on</span>
+				<span class="input">
+					<span class="doubleselect">
+						<day-month day="b.endday" month="b.endmonth" year="year"></day-month>
+					</span>
+				</span>
+				<span class="validation"></span>
+			</div>
+			<div class="item">
+				<span class="label">Which days</span>
+				<span class="input">
+					<span class="textbox">
+						<input type="checkbox" ng-model="b.days[0]" ng-true-value="1" ng-false-value="0" id="weekly_mon"><label for="weekly_mon">Mon</label>&nbsp;
+						<input type="checkbox" ng-model="b.days[1]" ng-true-value="1" ng-false-value="0" id="weekly_tues"><label for="weekly_tues">Tues</label>&nbsp;
+						<input type="checkbox" ng-model="b.days[2]" ng-true-value="1" ng-false-value="0" id="weekly_wed"><label for="weekly_wed">Wed</label>&nbsp;
+						<input type="checkbox" ng-model="b.days[3]" ng-true-value="1" ng-false-value="0" id="weekly_thurs"><label for="weekly_thurs">Thurs</label>&nbsp;
+						<input type="checkbox" ng-model="b.days[4]" ng-true-value="1" ng-false-value="0" id="weekly_fri"><label for="weekly_fri">Fri</label>&nbsp;
+						<input type="checkbox" ng-model="b.days[5]" ng-true-value="1" ng-false-value="0" id="weekly_sat"><label for="weekly_sat">Sat</label>&nbsp;
+						<input type="checkbox" ng-model="b.days[6]" ng-true-value="1" ng-false-value="0" id="weekly_sun"><label for="weekly_sun">Sun</label>&nbsp;
+					</span>
+				</span>
+				<span class="validation"></span>
+			</div>
+			<div class="item">
+				<span class="label">Every how many weeks</span>
+				<span class="input">
+					<span class="textbox">
+						<input ng-model="b.every">
+					</span>
+				</span>
+				<span class="validation"></span>
+			</div>
+		</div>
+		<div ng-switch-when="monthly">
+			<div class="item">
+				<span class="label">Starts on</span>
+				<span class="input">
+					<span class="doubleselect">
+						<day-month day="b.startday" month="b.startmonth" year="year"></day-month>
+					</span>
+				</span>
+				<span class="validation"></span>
+			</div>
+			<div class="item">
+				<span class="label">Ends on</span>
+				<span class="input">
+					<span class="doubleselect">
+						<day-month day="b.endday" month="b.endmonth" year="year"></day-month>
+					</span>
+				</span>
+				<span class="validation"></span>
+			</div>
+			<div class="item">
+				<span class="label">Sub Type</span>
+				<span class="input">
+					<span class="select">
+						<select ng-options="opt.value as opt.label for opt in monthlySubTypes" ng-model="b.subtype" ng-change="validateType()"></select>
+					</span>
+				</span>
+				<span class="validation"></span>
+			</div>
+			<div class="item" ng-if="b.subtype=='each'">
+				<span class="label">Which days</span>
+				<span class="input">
+					<span class="multilinelabel">
+						<input ng-repeat-start="i in [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]"
+						       type="checkbox" 
+						       ng-model="b.days[$index]" 
+						       ng-true-value="1"
+						       ng-false-value="0"
+						       id="weekly_{{$index}}">
+						<label for="weekly_{{$index}}">{{i}}</label>
+						<span ng-repeat-end>&nbsp;</span>
+					</span>
+				</span>
+				<span class="validation"></span>
+			</div>
+			<div class="item" ng-if="b.subtype!='each'">
+				<span class="label">What</span>
+				<span class="input">
+					<span class="select">
+						<select ng-options="opt.value as opt.label for opt in monthlyWhat" ng-model="b.what"></select>
+					</span>
+				</span>
+				<span class="validation"></span>
+			</div>
+			<div class="item">
+				<span class="label">Every how many months</span>
+				<span class="input">
+					<span class="textbox">
+						<input ng-model="b.every">
+					</span>
+				</span>
+				<span class="validation"></span>
+			</div>
+		</div>
+	</div>
+	<div class="item">
+		<span class="label">Amount</span>
+		<span class="input">
+			<span class="textbox">
+				<currency-input model="b.value"></currency-input>
+			</span>
+		</span>
+		<span class="validation"></span>
+	</div>
+	<div class="item">
+		<span class="label">Summary</span>
+		<span class="input">
+			<span class="multilinelabel">
+				{{summary}}
+			</span>
+		</span>
+		<span class="validation"></span>
+	</div>
+	<div class="item">
+		<budget-graph budgets="[b]" year="year"></budget-graph>
+	</div>
+</div>
+<div class="button-container">
+	<span class="button red" ng-click="cancel()">Cancel</span>
+	<span class="button green" ng-click="save(b)">{{ mode=="EDIT" ? "Save" : "Add" }}</span>
+</div>

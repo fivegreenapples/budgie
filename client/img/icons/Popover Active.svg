@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0" y="0" width="50" height="50" viewBox="0, 0, 50, 50">
+  <g id="Layer_1">
+    <path d="M5.364,11.51 C8.674,7.086 13.926,2.8 19.444,2.011 C23.066,1.494 27.136,1.419 30.787,2.514 C31.854,2.834 32.751,3.449 33.804,3.799 C34.598,4.064 35.798,3.979 36.486,4.47 C37.195,4.977 38.963,5.75 39.503,6.426 C40.863,8.125 41.49,9.476 42.688,11.454 C46.797,18.239 48.666,24.553 44.867,33.524 C44.241,35.002 43.444,36.203 42.744,37.603 C41.248,40.595 40.022,42.543 36.933,44.308 C32.334,46.936 29.189,49.514 23.914,48.635 C22.594,48.415 20.471,48.055 19.109,47.828 C17.109,47.495 14.116,46.251 12.46,45.146 C5.523,40.521 2.403,34.014 2.403,25.056 C2.403,23.771 2.582,21.396 2.794,20.338 C3.339,17.609 3.8,15.686 5.196,13.242" fill="#CACACA"/>
+    <path d="M25.755,40.53 C31.399,32.31 35.842,26.564 41.959,18.739" fill-opacity="0" stroke="#808080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M25.755,40.53 C18.729,33.296 13.904,27.006 9.105,18.739" fill-opacity="0" stroke="#808080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M2.424,25.053 C2.927,9.855 11.563,1.865 25.755,1.865" fill-opacity="0" stroke="#ADADAD" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M25.755,49.135 C11.004,49.135 2.424,39.524 2.424,25.556" fill-opacity="0" stroke="#ADADAD" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M25.755,1.865 C55.089,1.809 53.86,49.135 25.755,49.135" fill-opacity="0" stroke="#ADADAD" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
