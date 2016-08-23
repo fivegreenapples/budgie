@@ -2,8 +2,8 @@
 
 	<div>
 		<h1>Create New Year</h1>
-		<p>Create a new data file for the next year. Accounts and categories will be copied from the current year.</p>
-		<button ng-click="createNewYear()">Create year</button>
+		<p>Create a new data file for this year or the next year. Accounts and categories will be copied from the previous years data if available.</p>
+		<button ng-if="newYear" ng-click="createNewYear(newYear)">Create year {{newYear}}</button>
 	</div>
 
 </div>

@@ -41,7 +41,6 @@ App.directive("budgetGraph", function() {
 					}, true) // deep watch
 				} else {
 					$scope.$watch("amounts", function() {
-						console.log($scope.amounts)
 						refreshVals($scope.amounts)
 					}, true) // deep watch
 				}

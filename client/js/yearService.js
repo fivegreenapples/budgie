@@ -31,7 +31,6 @@ App.service("year", [
 			},
 			createNewYear: function(year) {
 				return $http.post("/server/create.php", {year: year}).then(function(response) {
-					console.log(response)
 					triggerWatchers()
 				})
 			},

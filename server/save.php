@@ -52,6 +52,7 @@ $DECODED_DATA = $DECODED->data;
 $DATA_DIR = dirname(__FILE__)."/data";
 $DATA_FILE = $DATA_DIR."/".$YEAR.".json";
 
+
 $EXISTING_DATA = null;
 if (is_file($DATA_FILE))
 {
@@ -75,6 +76,20 @@ $DECODED_DATA->last_saved = $NOW_TIME->format("c"); // ISO 8601
 
 $ENCODED_DATA = json_encode($DECODED_DATA, JSON_PRETTY_PRINT);
 
+$BACKUP_FILE = dirname($DATA_FILE)."/".$YEAR.".".$EXISTING_DATA->sequence_number.".json";
+if (is_file($BACKUP_FILE))
+{
+	header("HTTP/1.0 500 Server Error");
+	echo "Backup file already exists.";
+	exit();
+}
+copy($DATA_FILE, $BACKUP_FILE);
+if (!is_file($BACKUP_FILE) || md5_file($DATA_FILE) != md5_file($BACKUP_FILE))
+{
+	header("HTTP/1.0 500 Server Error");
+	echo "Backup file failed to write correctly.";
+	exit();
+}
 file_put_contents($DATA_FILE, $ENCODED_DATA);
 
 header("Content-type: application/json");

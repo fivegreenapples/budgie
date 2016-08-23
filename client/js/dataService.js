@@ -155,8 +155,8 @@ App.factory("data", [
 				var reggy
 				for (category in DATA.categories) {
 					for (label in DATA.categories[category]) {
-						for (var i=0; i<DATA.categories[category][label].length; ++i) {
-							var match = DATA.categories[category][label][i]
+						for (var i=0; i<DATA.categories[category][label].matchers.length; ++i) {
+							var match = DATA.categories[category][label].matchers[i]
 							if (match.type === "start") {
 								if (description.substr(0, match.match.length) === match.match) {
 									return [category, label]
@@ -208,8 +208,24 @@ App.factory("data", [
 				getAllAccountData: whenLoaded(function() {
 					return angular.copy(DATA.accounts)
 				}),
+				setAllAccountData: whenLoaded(function(accData) {
+					// No validation! Only done if empty.
+					if (DATA.accounts.length) {
+						return $q.reject("ACCOUNT_DATA_NOT_EMPTY")
+					}
+					DATA.accounts = angular.copy(accData);
+					triggerWatchers()
+				}),
 				getAllCategoryData: whenLoaded(function () {
 					return angular.copy(DATA.categories)
+				}),
+				setAllCategoryData: whenLoaded(function (categoryData) {
+					// No validation! Only done if empty.
+					if (Object.keys(DATA.categories).length) {
+						return $q.reject("CATEGORY_DATA_NOT_EMPTY")
+					}
+					DATA.categories = angular.copy(categoryData);
+					triggerWatchers()
 				}),
 
 
@@ -418,7 +434,7 @@ App.factory("data", [
 					if (DATA.categories[category][newVal]) {
 						return $q.reject("NEW_LABEL_EXISTS")
 					}
-					DATA.categories[category][newVal] = {budgets:[],labels:[]}
+					DATA.categories[category][newVal] = {budgets:[],matchers:[]}
 					triggerWatchers()
 				}),
 				deleteCategoryLabel: whenLoaded(function(category, oldVal) {
