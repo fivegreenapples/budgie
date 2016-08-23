@@ -49,7 +49,7 @@ if (!isset($DECODED->data))
 }
 $DECODED_DATA = $DECODED->data;
 
-$DATA_DIR = dirname(__DIR__);
+$DATA_DIR = dirname(__FILE__)."/data";
 $DATA_FILE = $DATA_DIR."/".$YEAR.".json";
 
 $EXISTING_DATA = null;
