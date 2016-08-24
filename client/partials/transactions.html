@@ -15,6 +15,12 @@
 	<div>
 		<h1>{{accounts[activeAccountIndex].fullName}} <i class="fixedsize button icon popover" ng-click="showAccountPopover($event)"></i></h1>
 	</div>
+	<div class="transaction-filters">
+		<span class="button green"
+		      ng-click="toggleUncategorised()">
+			Toggle Uncategorised
+		</span>
+	</div>
 
 	<div class="transaction-log">
 		<div class="log-body">

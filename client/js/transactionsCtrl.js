@@ -24,7 +24,8 @@ App.controller("transactionsCtrl", [
 		$scope.filters = {
 			description:"",
 			label:"",
-			category:""
+			category:"",
+			only_uncategorised:false
 		}
 
 		function accountInfo(mode, data, validation) {
@@ -373,11 +374,20 @@ App.controller("transactionsCtrl", [
 						return (t.category.toLowerCase().indexOf($scope.filters.category.toLowerCase()) != -1);
 					})
 				}
+				if ($scope.filters.only_uncategorised) {
+					$scope.accounts[$scope.activeAccountIndex].transactions = $scope.accounts[$scope.activeAccountIndex].transactions.filter(function(t) {
+						// see record if it has no auto category and at least one entry is uncategorised
+						return !t.autoCategorisation && t.entries.reduce(function(prev, e) { return !e.categorisation || prev; }, false)
+					})
+				}
 
 				$scope.accounts[$scope.activeAccountIndex].transactions.sort(function(a,b) {
 					var val = 0
 					if ($scope.sort === "date") {
 						val = a.date - b.date
+					}
+					if (val === 0) {
+						val = a.bankDescription.localeCompare(b.bankDescription)
 					}
 					if ($scope.sortDirection === "desc") {
 						val *= -1
@@ -389,6 +399,11 @@ App.controller("transactionsCtrl", [
 				$scope.activeAccountIndex = null
 			}
 
+		}
+
+		$scope.toggleUncategorised = function() {
+			$scope.filters.only_uncategorised = !$scope.filters.only_uncategorised
+			$scope.refreshTransactions();
 		}
 		YEAR.nowAndWhenChanged($scope, function() {
 			if (cancelNotifier) {
@@ -434,6 +449,44 @@ App.controller("transactionsCtrl", [
 
 					CURRENT_DATA.getAllAccountData().then(function(accounts) {
 						ORIGINAL_ACCOUNTS = accounts
+
+						// sum everything
+						var lark = {uncat:{}};
+						accounts[0].transactions.forEach(function(t) {
+							if (t.autoCategorisation) {
+								if (!(t.autoCategorisation[0] in lark)) {
+									lark[t.autoCategorisation[0]] = {
+										total: 0,
+										labels: {}
+									};
+								}
+								lark[t.autoCategorisation[0]].total += t.originalAmount;
+								if (!(t.autoCategorisation[1] in lark[t.autoCategorisation[0]].labels)) {
+									lark[t.autoCategorisation[0]].labels[t.autoCategorisation[1]] = 0;
+								}
+								lark[t.autoCategorisation[0]].labels[t.autoCategorisation[1]] += t.originalAmount
+							} else {
+								if (!(t.bankDescription in lark.uncat)) {
+									lark.uncat[t.bankDescription] = 0;
+								}
+								lark.uncat[t.bankDescription] += t.originalAmount;
+							}
+						})
+						console.log(lark)
+						var csv = "";
+						angular.forEach(lark, function(val, category) {
+							// angular.forEach(val.labels, function(labelTotal, label) {
+							// 	csv += category + "," + label + "," + labelTotal + "\n";
+							// })
+							csv += category + "," + val.total + "\n";
+						})
+						alert(csv)
+						csv = ""
+						angular.forEach(lark.uncat, function(descTotal, desc) {
+							csv += desc + "," + descTotal + "\n";
+						})
+						alert(csv)
+
 						$scope.refreshTransactions();
 					})
 				})

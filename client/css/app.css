@@ -474,7 +474,8 @@ budget-graph {
 	height:1.5em;
 }
 .modaldetail .alert .button-container .button,
-.modaldetail .form .button-container .button {
+.modaldetail .form .button-container .button,
+.transaction-filters .button {
 	display:inline-block;
 	border:1px solid #999;
 	border-bottom:3px solid #999;
@@ -486,7 +487,8 @@ budget-graph {
 	cursor:pointer;
 }
 .modaldetail .alert .button-container .button.red,
-.modaldetail .form .button-container .button.red {
+.modaldetail .form .button-container .button.red,
+.transaction-filters .button.red {
 	border:1px solid #d77;
 	border-bottom:3px solid #d77;
 	float:left;
@@ -494,7 +496,8 @@ budget-graph {
 	margin-right:1em;
 }
 .modaldetail .alert .button-container .button.green,
-.modaldetail .form .button-container .button.green {
+.modaldetail .form .button-container .button.green,
+.transaction-filters .button.green {
 	border:1px solid #3a3;
 	border-bottom:3px solid #3a3;
 }
@@ -565,4 +568,8 @@ budget-graph {
 .modaldetail .form .item-container .item .validation {
 	display:inline-block;
 	color:#dd3456;
+}
+
+.transaction-filters {
+	padding:1px 20px;
 }
