@@ -1,9 +1,9 @@
 <div class="logo">Budgie</div>
-<div class="menuitem" ng-class="{active:$state.current.name=='transactions'}"><span ng-click="$state.go('transactions')">Transactions</span></div>
-<div class="menuitem" ng-class="{active:$state.current.name=='categories' || $state.current.name=='categoryDetail'}"><span ng-click="$state.go('categories')">Categories</span></div>
-<div class="menuitem" ng-class="{active:$state.current.name=='budget'}"><span ng-click="$state.go('budget')">Budget</span></div>
-<div class="menuitem" ng-class="{active:$state.current.name=='reports'}"><span ng-click="$state.go('reports')">Reports</span></div>
-<div class="menuitem" ng-class="{active:$state.current.name=='admin'}"><span ng-click="$state.go('admin')">Admin</span></div>
+<div class="menuitem" ng-class="{active:$state.is('transactions')}"><span ng-click="$state.go('transactions')">Transactions</span></div>
+<div class="menuitem" ng-class="{active:$state.includes('categories')}"><span ng-click="$state.go('categories')">Categories</span></div>
+<div class="menuitem" ng-class="{active:$state.is('budget')}"><span ng-click="$state.go('budget')">Budget</span></div>
+<div class="menuitem" ng-class="{active:$state.is('reports')}"><span ng-click="$state.go('reports')">Reports</span></div>
+<div class="menuitem" ng-class="{active:$state.is('admin')}"><span ng-click="$state.go('admin')">Admin</span></div>
 
 <div class="rightitems">
 	<div class="savebutton" ng-show="changes" ng-click="saveChanges()">

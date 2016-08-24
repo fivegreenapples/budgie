@@ -29,9 +29,13 @@ App.config([
 			url: "/categories",
 			templateUrl: "partials/categories.html"
 		})
-		.state('categories.categorydetail', {
-			url: "/categories/:category",
-			templateUrl: "partials/categoryDetail.html"
+		.state('categories.category', {
+			url: "/:category",
+			templateUrl: "partials/categories.html"
+		})
+		.state('categories.category.label', {
+			url: "/:label",
+			templateUrl: "partials/categories.html"
 		})
 		.state('reports', {
 			url: "/reports",

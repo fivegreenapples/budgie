@@ -1,18 +1,19 @@
 App.controller("categoriesCtrl", [
 	"$rootScope",
 	"$scope",
+	"$stateParams",
 	"year",
 	"data",
 	"modal",
-	function($rootScope, $scope, YEAR, DATA, MODAL) {
+	function($rootScope, $scope, $stateParams, YEAR, DATA, MODAL) {
 
 		$scope.matcherMapping = {
 			start: "Starts with:",
 			exact: "Matches exactly:",
 			regex: "Matches the pattern:"
 		}
-		$scope.activeCategory = null;
-		$scope.activeLabel = null;
+		$scope.activeCategory = $stateParams.category ? $stateParams.category : null;
+		$scope.activeLabel = $stateParams.label ? $stateParams.label : null;;
 		$scope.activeBudgetIndex = null;
 
 		$scope.actions = [{

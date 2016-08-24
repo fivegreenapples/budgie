@@ -11,7 +11,7 @@
 				<div class="item category" 
 				     ng-repeat-start="category in categories"
 				     ng-class="{active:activeCategory==category.name}"
-				     ng-click="chooseCategory($index)">
+				     ng-click="$state.go('categories.category', {category:category.name});chooseCategory($index)">
 					{{ category.name }}
 					<i class="icon popover" ng-click="showCategoryPopoverMenu($event)"></i>
 				</div>
@@ -29,7 +29,7 @@
 				     ng-if="activeCategory"
 				     ng-repeat-start="label in categoryLabels[activeCategory]"
 				     ng-class="{active:activeLabel==label.name}"
-				     ng-click="chooseLabel($index)">
+				     ng-click="$state.go('categories.category.label', {category:activeCategory,label:label.name});chooseLabel($index)">
 					{{ label.name }}
 					<i class="icon popover" ng-click="showLabelPopoverMenu($event)"></i>
 				</div>
