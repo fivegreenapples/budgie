@@ -365,7 +365,6 @@ App.factory("data", [
 					}
 
 					var amounts = zeroesForYear(CURRENT_YEAR)
-					console.log("amounts", amounts)
 					DATA.accounts.forEach(function(account) {
 						account.transactions.forEach(function(transaction) {
 							var transactionDayOfYear = moment(transaction.date).dayOfYear()

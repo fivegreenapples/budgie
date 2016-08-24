@@ -450,42 +450,42 @@ App.controller("transactionsCtrl", [
 					CURRENT_DATA.getAllAccountData().then(function(accounts) {
 						ORIGINAL_ACCOUNTS = accounts
 
-						// sum everything
-						var lark = {uncat:{}};
-						accounts[0].transactions.forEach(function(t) {
-							if (t.autoCategorisation) {
-								if (!(t.autoCategorisation[0] in lark)) {
-									lark[t.autoCategorisation[0]] = {
-										total: 0,
-										labels: {}
-									};
-								}
-								lark[t.autoCategorisation[0]].total += t.originalAmount;
-								if (!(t.autoCategorisation[1] in lark[t.autoCategorisation[0]].labels)) {
-									lark[t.autoCategorisation[0]].labels[t.autoCategorisation[1]] = 0;
-								}
-								lark[t.autoCategorisation[0]].labels[t.autoCategorisation[1]] += t.originalAmount
-							} else {
-								if (!(t.bankDescription in lark.uncat)) {
-									lark.uncat[t.bankDescription] = 0;
-								}
-								lark.uncat[t.bankDescription] += t.originalAmount;
-							}
-						})
-						console.log(lark)
-						var csv = "";
-						angular.forEach(lark, function(val, category) {
-							// angular.forEach(val.labels, function(labelTotal, label) {
-							// 	csv += category + "," + label + "," + labelTotal + "\n";
-							// })
-							csv += category + "," + val.total + "\n";
-						})
-						alert(csv)
-						csv = ""
-						angular.forEach(lark.uncat, function(descTotal, desc) {
-							csv += desc + "," + descTotal + "\n";
-						})
-						alert(csv)
+						// // sum everything
+						// var lark = {uncat:{}};
+						// accounts[0].transactions.forEach(function(t) {
+						// 	if (t.autoCategorisation) {
+						// 		if (!(t.autoCategorisation[0] in lark)) {
+						// 			lark[t.autoCategorisation[0]] = {
+						// 				total: 0,
+						// 				labels: {}
+						// 			};
+						// 		}
+						// 		lark[t.autoCategorisation[0]].total += t.originalAmount;
+						// 		if (!(t.autoCategorisation[1] in lark[t.autoCategorisation[0]].labels)) {
+						// 			lark[t.autoCategorisation[0]].labels[t.autoCategorisation[1]] = 0;
+						// 		}
+						// 		lark[t.autoCategorisation[0]].labels[t.autoCategorisation[1]] += t.originalAmount
+						// 	} else {
+						// 		if (!(t.bankDescription in lark.uncat)) {
+						// 			lark.uncat[t.bankDescription] = 0;
+						// 		}
+						// 		lark.uncat[t.bankDescription] += t.originalAmount;
+						// 	}
+						// })
+						// console.log(lark)
+						// var csv = "";
+						// angular.forEach(lark, function(val, category) {
+						// 	// angular.forEach(val.labels, function(labelTotal, label) {
+						// 	// 	csv += category + "," + label + "," + labelTotal + "\n";
+						// 	// })
+						// 	csv += category + "," + val.total + "\n";
+						// })
+						// alert(csv)
+						// csv = ""
+						// angular.forEach(lark.uncat, function(descTotal, desc) {
+						// 	csv += desc + "," + descTotal + "\n";
+						// })
+						// alert(csv)
 
 						$scope.refreshTransactions();
 					})

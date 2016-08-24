@@ -8,7 +8,7 @@ App.directive("budgetGraph", function() {
 			budgets:"=",
 			amounts:"=",
 			year:"=",
-			autoscale: "="
+			label:"=",
 		},
 		controller: [ 
 			"$scope",
@@ -44,19 +44,19 @@ App.directive("budgetGraph", function() {
 						refreshVals($scope.amounts)
 					}, true) // deep watch
 				}
+
+				// drawn as a logarithmic y-axis up to 10,000 pounds (note all values are in pence)
+
 				function refreshVals(dailyAmounts) {
-					$scope.maxBarHeight = 0
+					$scope.maxBarHeight = Math.log(10000);
 					$scope.vals = dailyAmounts
 						.reduce(function(prev, current, index) {
-							if (current != 0) {
+							var useCurrent = Math.abs(current/100)
+							if (useCurrent >= 1) {
 								prev.push({
 									x:index,
-									h:current,
+									h:Math.log(useCurrent),
 								})
-								$scope.maxBarHeight = Math.max(
-									$scope.maxBarHeight, 
-									current
-								)
 							}
 							return prev
 						}, [])

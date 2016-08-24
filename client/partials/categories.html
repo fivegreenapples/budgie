@@ -43,8 +43,8 @@
 					<i ng-if="activeCategory && activeLabel" ng-click="addBudget()" class="icon plus button"></i>
 				</div>
 				<div>
-						<budget-graph budgets="lastYearBudgets(activeCategory, activeLabel)" year="year-1"></budget-graph>
-						<budget-graph amounts="lastYearAmounts(activeCategory, activeLabel)" year="year-1"></budget-graph>
+					<budget-graph amounts="previousYearAmounts(activeCategory, activeLabel)" year="year-1" label="(year-1)+' Transactions'"></budget-graph>
+					<budget-graph amounts="currentYearAmounts(activeCategory, activeLabel)" year="year" label="(year)+' Transactions'"></budget-graph>
 					<div ng-if="activeCategory && 
 					            activeLabel && 
 					            categoryDetails[activeCategory][activeLabel].budgets.length">
@@ -60,12 +60,9 @@
 						</div>
 						<div ng-repeat-end class="spacer"></div>
 					</div>
-					<div ng-if="activeCategory && 
-					            activeLabel && 
-					            !categoryDetails[activeCategory][activeLabel].budgets.length">
-						<p>No budgets configured</p>
-					</div>
 				</div>
+
+
 				<div class="header">
 					Matchers
 					<i ng-if="activeCategory && activeLabel" ng-click="addMatcher()" class="icon plus button"></i>

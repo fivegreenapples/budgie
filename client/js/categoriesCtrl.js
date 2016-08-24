@@ -6,11 +6,6 @@ App.controller("categoriesCtrl", [
 	"modal",
 	function($rootScope, $scope, YEAR, DATA, MODAL) {
 
-		var CURRENT_DATA = null
-		var PREVIOUS_YEAR_DATA = null
-		var cancelNotifier = null
-		var CATEGORIES
-
 		$scope.matcherMapping = {
 			start: "Starts with:",
 			exact: "Matches exactly:",
@@ -117,7 +112,7 @@ App.controller("categoriesCtrl", [
 				}]
 			}).then(function(data) {
 				if (data.button == "Add") {
-					CURRENT_DATA.addCategory(data.items[0].input.value).then(
+					LOCAL_DATA.CURRENT_YEAR.addCategory(data.items[0].input.value).then(
 						function() {
 							$scope.activeCategory = data.items[0].input.value
 						},
@@ -160,7 +155,7 @@ App.controller("categoriesCtrl", [
 				}]
 			}).then(function(data) {
 				if (data.button == "Add") {
-					CURRENT_DATA.addCategoryLabel($scope.activeCategory, data.items[0].input.value).then(
+					LOCAL_DATA.CURRENT_YEAR.addCategoryLabel($scope.activeCategory, data.items[0].input.value).then(
 						function() {
 							$scope.activeLabel = data.items[0].input.value
 						},
@@ -189,7 +184,7 @@ App.controller("categoriesCtrl", [
 			}
 			MODAL.addBudgetForm().then(function(data) {
 				$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel].budgets.push(data)
-				CURRENT_DATA.setCategoryLabelDetails(
+				LOCAL_DATA.CURRENT_YEAR.setCategoryLabelDetails(
 					$scope.activeCategory, 
 					$scope.activeLabel, 
 					$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel]
@@ -221,7 +216,7 @@ App.controller("categoriesCtrl", [
 						}).then(function(newValue) {
 							if (newValue != currentVal) {
 								$scope.activeCategory = newValue
-								CURRENT_DATA.renameCategory(currentVal, newValue).then(
+								LOCAL_DATA.CURRENT_YEAR.renameCategory(currentVal, newValue).then(
 									null,
 									function(err) {
 										$scope.activeCategory = currentVal
@@ -254,7 +249,7 @@ App.controller("categoriesCtrl", [
 						}]
 					}).then(function(whichDelete) {
 						if (whichDelete == "Yes") {
-							CURRENT_DATA.deleteCategory($scope.activeCategory)
+							LOCAL_DATA.CURRENT_YEAR.deleteCategory($scope.activeCategory)
 							$scope.activeCategory = null;
 						}
 					})
@@ -285,7 +280,7 @@ App.controller("categoriesCtrl", [
 						}).then(function(newValue) {
 							if (newValue != currentVal) {
 								$scope.activeLabel = newValue
-								CURRENT_DATA.renameCategoryLabel($scope.activeCategory, currentVal, newValue).then(
+								LOCAL_DATA.CURRENT_YEAR.renameCategoryLabel($scope.activeCategory, currentVal, newValue).then(
 									null,
 									function(err) {
 										$scope.activeLabel = currentVal
@@ -318,7 +313,7 @@ App.controller("categoriesCtrl", [
 						}]
 					}).then(function(whichDelete) {
 						if (whichDelete == "Yes") {
-							CURRENT_DATA.deleteCategoryLabel($scope.activeCategory, $scope.activeLabel)
+							LOCAL_DATA.CURRENT_YEAR.deleteCategoryLabel($scope.activeCategory, $scope.activeLabel)
 							$scope.activeLabel = null;
 						}
 					})
@@ -339,7 +334,7 @@ App.controller("categoriesCtrl", [
 					MODAL.addBudgetForm($scope.categoryDetails[$scope.activeCategory][$scope.activeLabel].budgets[$scope.activeBudgetIndex])
 						.then(function(data) {
 							$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel].budgets[$scope.activeBudgetIndex] = data
-							CURRENT_DATA.setCategoryLabelDetails(
+							LOCAL_DATA.CURRENT_YEAR.setCategoryLabelDetails(
 								$scope.activeCategory, 
 								$scope.activeLabel, 
 								$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel]
@@ -359,12 +354,12 @@ App.controller("categoriesCtrl", [
 					}).then(function(whichDelete) {
 						if (whichDelete == "Yes") {
 							$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel].budgets.splice($scope.activeBudgetIndex, 1)
-							CURRENT_DATA.setCategoryLabelDetails(
+							LOCAL_DATA.CURRENT_YEAR.setCategoryLabelDetails(
 								$scope.activeCategory, 
 								$scope.activeLabel, 
 								$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel]
 							)
-							CURRENT_DATA.setCategoryLabelDetails()
+							LOCAL_DATA.CURRENT_YEAR.setCategoryLabelDetails()
 							$scope.activeBudgetIndex = null;
 						}
 					})
@@ -372,49 +367,48 @@ App.controller("categoriesCtrl", [
 			})
 		}
 
-		$scope.lastYearBudgetCache = {}
-		$scope.lastYearBudgets = function(category, label) {
-			if (!$scope.lastYearBudgetCache[category]) {
-				$scope.lastYearBudgetCache[category] = {}
-			}
-			if (!$scope.lastYearBudgetCache[category][label]) {
-				$scope.lastYearBudgetCache[category][label] = []
-				PREVIOUS_YEAR_DATA
-					.getCategoryLabelBudgets(category, label)
-					.then(function(budgets) {
-						$scope.lastYearBudgetCache[category][label] = budgets
-					})
-			}
-			return $scope.lastYearBudgetCache[category][label]
+		$scope.amountCache = {}
+		$scope.currentYearAmounts = function(category, label) {
+			return amountsFor("CURRENT_YEAR", category, label)
 		}
-		$scope.lastYearAmountCache = {}
-		$scope.lastYearAmounts = function(category, label) {
-			if (!$scope.lastYearAmountCache[category]) {
-				$scope.lastYearAmountCache[category] = {}
+		$scope.previousYearAmounts = function(category, label) {
+			return amountsFor("PREVIOUS_YEAR", category, label)
+		}
+		function amountsFor(when, category, label) {
+			if (!$scope.amountCache[when]) {
+				$scope.amountCache[when] = {}
 			}
-			if (!$scope.lastYearAmountCache[category][label]) {
-				$scope.lastYearAmountCache[category][label] = []
-				PREVIOUS_YEAR_DATA
+			if (!$scope.amountCache[when][category]) {
+				$scope.amountCache[when][category] = {}
+			}
+			if (!$scope.amountCache[when][category][label]) {
+				$scope.amountCache[when][category][label] = []
+				LOCAL_DATA[when]
 					.getAmountsByDayForCategoryLabel(category, label)
 					.then(function(amounts) {
-						$scope.lastYearAmountCache[category][label] = amounts
+						$scope.amountCache[when][category][label] = amounts
 					})
 			}
-			return $scope.lastYearAmountCache[category][label]
+			return $scope.amountCache[when][category][label]
 		}
+
+		var LOCAL_DATA = null
+		var cancelNotifier = null
+		var CATEGORIES
 
 		YEAR.nowAndWhenChanged($scope, function() {
 			if (cancelNotifier) {
 				cancelNotifier()
 			}
-			$scope.lastYearBudgetCache = {}
-			$scope.lastYearAmountCache = {}
+			$scope.amountCache = {}
 			$scope.year = YEAR.year()
-			CURRENT_DATA = DATA(YEAR.year())
-			PREVIOUS_YEAR_DATA = DATA(YEAR.year()-1)
+			LOCAL_DATA = {
+				CURRENT_YEAR: DATA(YEAR.year()),
+				PREVIOUS_YEAR: DATA(YEAR.year()-1)
+			}
 
-			cancelNotifier = CURRENT_DATA.nowAndWhenChanged($scope, function() {
-				CURRENT_DATA.getAllCategoryData().then(function(categories) {
+			cancelNotifier = LOCAL_DATA.CURRENT_YEAR.nowAndWhenChanged($scope, function() {
+				LOCAL_DATA.CURRENT_YEAR.getAllCategoryData().then(function(categories) {
 					CATEGORIES = categories
 					$scope.refreshCategories();
 				})
