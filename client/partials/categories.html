@@ -7,7 +7,25 @@
 				<i ng-click="addCategory()" class="icon plus button"></i>
 			</div>
 			<div class="item-container">
-				<div ng-if="categories.length" class="spacer"></div>
+				<div class="spacer"></div>
+				<div class="item category" 
+				     ng-class="{active:activeCategory===ALL}"
+				     ng-click="$state.go('categories.category', {category:ALL});chooseCategory(ALL)">
+					Everything
+				</div>
+				<div class="spacer"></div>
+				<div class="item category" 
+				     ng-class="{active:activeCategory===UNCAT}"
+				     ng-click="$state.go('categories.category', {category:UNCAT});chooseCategory(UNCAT)">
+					Uncategorised
+				</div>
+				<div class="spacer"></div>
+				<div class="item category" 
+				     ng-class="{active:activeCategory===CAT}"
+				     ng-click="$state.go('categories.category', {category:CAT});chooseCategory(CAT)">
+					Categorised
+				</div>
+				<div class="spacer"></div>
 				<div class="item category" 
 				     ng-repeat-start="category in categories"
 				     ng-class="{active:activeCategory==category.name}"
@@ -18,15 +36,20 @@
 				<div ng-repeat-end class="spacer"></div>
 			</div>
 		</div>
-		<div class="column labels">
+		<div class="column labels" ng-if="activeCategory && activeCategory!=UNCAT && activeCategory!=CAT && activeCategory!=ALL" >
 			<div class="header">
 				Labels
-				<i ng-if="activeCategory" ng-click="addLabel()" class="icon plus button"></i>
+				<i ng-click="addLabel()" class="icon plus button"></i>
 			</div>
 			<div class="item-container">
-				<div ng-if="activeCategory && categoryLabels[activeCategory].length" class="spacer"></div>
+				<div class="spacer"></div>
 				<div class="item label"
-				     ng-if="activeCategory"
+				     ng-class="{active:activeLabel==ALL}"
+				     ng-click="$state.go('categories.category.label', {category:activeCategory,label:ALL});chooseLabel(ALL)">
+					All Labels
+				</div>
+				<div class="spacer"></div>
+				<div class="item label"
 				     ng-repeat-start="label in categoryLabels[activeCategory]"
 				     ng-class="{active:activeLabel==label.name}"
 				     ng-click="$state.go('categories.category.label', {category:activeCategory,label:label.name});chooseLabel($index)">
@@ -39,7 +62,7 @@
 		<div class="column details">
 			<div class="item-container">
 				<div class="header">
-					Budgets
+					Transactions
 					<i ng-if="activeCategory && activeLabel" ng-click="addBudget()" class="icon plus button"></i>
 				</div>
 				<div>

@@ -10,6 +10,16 @@ App.factory("data", [
 		function zeroesForYear(year) {
 			return Array(daysInYear(year)).fill(0)
 		}
+		function amountsByDayForTransactions(year, transactions) {
+			var amounts = zeroesForYear(year)
+			transactions.forEach(function(transaction) {
+				var transactionDayOfYear = moment(transaction.date).dayOfYear()
+				transaction.entries.forEach(function(entry) {
+					amounts[transactionDayOfYear-1] += entry.amount
+				})
+			})
+			return amounts
+		}
 
 		return function(theYear) {
 
@@ -356,34 +366,85 @@ App.factory("data", [
 					triggerWatchers()
 				}),
 
-				getAmountsByDayForCategoryLabel: whenLoaded(function(category, label) {
+				getTransactionsForCategoryLabel: whenLoaded(function(category, label) {
+					var noLabel = (label === undefined) || (label === null)
 					if (!DATA.categories[category]) {
 						return $q.reject("CATEGORY_NOT_FOUND")
 					}
-					if (!DATA.categories[category][label]) {
+					if (!noLabel && !DATA.categories[category][label]) {
 						return $q.reject("LABEL_NOT_FOUND")
 					}
 
-					var amounts = zeroesForYear(CURRENT_YEAR)
-					DATA.accounts.forEach(function(account) {
-						account.transactions.forEach(function(transaction) {
-							var transactionDayOfYear = moment(transaction.date).dayOfYear()
-							transaction.entries.forEach(function(entry) {
-								if ((entry.categorisation && 
-								      entry.categorisation[0] === category &&
-								      entry.categorisation[1] === label) ||
-								    (!entry.categorisation && 
-								      transaction.autoCategorisation && 
-								      transaction.autoCategorisation[0] === category &&
-								      transaction.autoCategorisation[1] === label))
-								{
-									amounts[transactionDayOfYear-1] += entry.amount
-								}
+					return DATA.accounts.reduce(function(previous, account) {
+						return previous.concat(
+							account.transactions.filter(function(transaction) {
+								return transaction.entries.reduce(function(matched, entry) {
+									return matched || ((entry.categorisation && 
+									      entry.categorisation[0] === category &&
+									      (noLabel || entry.categorisation[1] === label)) ||
+									    (!entry.categorisation && 
+									      transaction.autoCategorisation && 
+									      transaction.autoCategorisation[0] === category &&
+									      (noLabel || transaction.autoCategorisation[1] === label)))
+								}, false)
 							})
-						})
-					})
-					return amounts
+						)
+					}, [])
 				}),
+				getUncategorisedTransactions: whenLoaded(function() {
+					return DATA.accounts.reduce(function(previous, account) {
+						return previous.concat(
+							account.transactions.filter(function(transaction) {
+								if (transaction.autoCategorisation) return false
+								return transaction.entries.reduce(function(matched, entry) {
+									return matched || !entry.categorisation
+								}, false)
+							})
+						)
+					}, [])
+				}),
+				getCategorisedTransactions: whenLoaded(function() {
+					return DATA.accounts.reduce(function(previous, account) {
+						return previous.concat(
+							account.transactions.filter(function(transaction) {
+								if (transaction.autoCategorisation) return true
+								return transaction.entries.reduce(function(matched, entry) {
+									return matched && entry.categorisation
+								}, true)
+							})
+						)
+					}, [])
+				}),
+				getAllTransactions: whenLoaded(function() {
+					return DATA.accounts.reduce(function(previous, account) {
+						return previous.concat(
+							account.transactions
+						)
+					}, [])
+				}),
+
+
+				getAmountsByDayForCategoryLabel: whenLoaded(function(category, label) {
+					return service.getTransactionsForCategoryLabel(category, label).then(function(transactions) {
+						return amountsByDayForTransactions(CURRENT_YEAR, transactions)
+					})
+				}),
+				getAmountsByDayForCategorised: whenLoaded(function() {
+					return service.getCategorisedTransactions().then(function(transactions) {
+						return amountsByDayForTransactions(CURRENT_YEAR, transactions)
+					})
+				}),
+				getAmountsByDayForUncategorised: whenLoaded(function() {
+					return service.getUncategorisedTransactions().then(function(transactions) {
+						return amountsByDayForTransactions(CURRENT_YEAR, transactions)
+					})
+				}),
+				getAmountsByDayForAll: whenLoaded(function() {
+					return service.getAllTransactions().then(function(transactions) {
+						return amountsByDayForTransactions(CURRENT_YEAR, transactions)
+					})
+				}),
+
 
 				renameCategory: whenLoaded(function(oldVal, newVal) {
 					if (!DATA.categories[oldVal]) {

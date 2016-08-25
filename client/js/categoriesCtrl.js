@@ -12,16 +12,20 @@ App.controller("categoriesCtrl", [
 			exact: "Matches exactly:",
 			regex: "Matches the pattern:"
 		}
-		$scope.activeCategory = $stateParams.category ? $stateParams.category : null;
+
+		// this is all a bit hideous
+		$scope.ALL = "__ALL__";
+		$scope.CAT = "__CATEGORISED__";
+		$scope.UNCAT = "__UNCATEGORISED__";
+		var magic_constants = {}
+		magic_constants[$scope.ALL] = $scope.ALL
+		magic_constants[$scope.CAT] = $scope.CAT
+		magic_constants[$scope.UNCAT] = $scope.UNCAT
+		// end hideous
+
+		$scope.activeCategory = $stateParams.category ? $stateParams.category : $scope.ALL;
 		$scope.activeLabel = $stateParams.label ? $stateParams.label : null;;
 		$scope.activeBudgetIndex = null;
-
-		$scope.actions = [{
-			label: "Add Category",
-			onclick: function() {
-				alert("ASdsad")
-			}
-		}]
 
 		$scope.refreshCategories = function() {
 			$scope.categories = []
@@ -47,32 +51,45 @@ App.controller("categoriesCtrl", [
 
 			$scope.categoryDetails = angular.copy(CATEGORIES)
 
-			if (!$scope.activeCategory || !$scope.categoryLabels[$scope.activeCategory]) {
-				$scope.activeCategory = $scope.categories.length && $scope.categories[0].name;
+			if (!$scope.activeCategory || (!magic_constants[$scope.activeCategory] && !$scope.categoryLabels[$scope.activeCategory])) {
+				$scope.activeCategory = $scope.ALL
 			}
-			if (!$scope.activeCategory || !$scope.activeLabel || !$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel]) {
-				$scope.activeLabel = $scope.activeCategory && $scope.categoryLabels[$scope.activeCategory].length && $scope.categoryLabels[$scope.activeCategory][0].name;
+			if (magic_constants[$scope.activeCategory]) {
+				$scope.activeLabel = null;
+			} else {
+				if (!$scope.activeLabel || !$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel]) {
+					$scope.activeLabel = $scope.ALL;
+				}
 			}
 
 		}
 
 		$scope.chooseCategory = function(categoryIndex) {
+			if (magic_constants[categoryIndex]) {
+				$scope.activeCategory = magic_constants[categoryIndex]
+				$scope.activeLabel = null
+				return
+			}
 			if ($scope.categories[categoryIndex]) {
 				if ($scope.categories[categoryIndex].name == $scope.activeCategory) {
-					$scope.activeCategory = null
+					$scope.activeCategory = $scope.ALL
 				} else {
 					$scope.activeCategory = $scope.categories[categoryIndex].name
-					$scope.activeLabel = $scope.activeCategory && $scope.categoryLabels[$scope.activeCategory].length && $scope.categoryLabels[$scope.activeCategory][0].name;
+					$scope.activeLabel = $scope.ALL
 				}
 			}
 		}
 		$scope.chooseLabel = function(labelIndex) {
+			if (magic_constants[labelIndex]) {
+				$scope.activeLabel = magic_constants[labelIndex]
+				return
+			}
 			if ($scope.activeCategory && 
 				$scope.categoryLabels[$scope.activeCategory] && 
 				$scope.categoryLabels[$scope.activeCategory][labelIndex])
 			{
 				if ($scope.categoryLabels[$scope.activeCategory][labelIndex].name == $scope.activeLabel) {
-					$scope.activeLabel = null
+					$scope.activeLabel = $scope.ALL
 				} else {
 					$scope.activeLabel = $scope.categoryLabels[$scope.activeCategory][labelIndex].name
 				}
@@ -384,11 +401,21 @@ App.controller("categoriesCtrl", [
 			}
 			if (!$scope.amountCache[when][category][label]) {
 				$scope.amountCache[when][category][label] = []
-				LOCAL_DATA[when]
-					.getAmountsByDayForCategoryLabel(category, label)
-					.then(function(amounts) {
-						$scope.amountCache[when][category][label] = amounts
-					})
+
+				var promise
+				if (category === $scope.UNCAT) {
+					promise = LOCAL_DATA[when].getAmountsByDayForUncategorised()
+				} else if (category === $scope.ALL) {
+					promise = LOCAL_DATA[when].getAmountsByDayForCategorised()
+				} else if (category === $scope.CAT) {
+					promise = LOCAL_DATA[when].getAmountsByDayForAll()
+				} else {
+					promise = LOCAL_DATA[when].getAmountsByDayForCategoryLabel(category, (label === $scope.ALL ? null : label))
+				}
+
+				promise.then(function(amounts) {
+					$scope.amountCache[when][category][label] = amounts
+				})
 			}
 			return $scope.amountCache[when][category][label]
 		}
