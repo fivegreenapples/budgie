@@ -415,6 +415,14 @@ App.controller("categoriesCtrl", [
 				}
 
 				promise.then(function(transactions) {
+					transactions.sort(function(a,b) {
+						var val = 0
+						val = a.date - b.date
+						if (val === 0) {
+							val = a.bankDescription.localeCompare(b.bankDescription)
+						}
+						return val;
+					})
 					$scope.transactionCache[when][category][label] = transactions
 				})
 			}

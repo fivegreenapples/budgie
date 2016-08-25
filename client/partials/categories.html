@@ -86,44 +86,66 @@
 				</div>
 
 
-<!-- 	<div class="transaction-log">
-		<div class="log-body">
-			<div class="log-row header-row">
-				<div class="item date">Date</div>
-				<div class="item description">Description</div>
-				<div class="item income">In</div>
-				<div class="item expense">Out</div>
-				<div class="item category">Category</div>
-			</div>
-			<div ng-repeat="t in currentYearTransactions(activeCategory, activeLabel) track by t.id" ng-init="transIndex = $index">
-				<div class="log-row" ng-repeat="e in t.entries track by $index">
-					<div class="item date">
-						<span ng-if="$index==0">
-							{{ t.date | dateformat }}
-							<i class="icon small popover button" ng-click="showTransactionPopover($event, t.id, transIndex)"></i>
-						</span>
-					</div>
-					<div class="item description">
-						<span>{{e.description ? e.description : t.bankDescription}}</span>
-						<span class="additional-description" ng-if="e.description &amp;&amp; t.bankDescription">{{t.bankDescription}}</span>
-					</div>
-					<div class="item income">
-						{{e.amount>0 ? (e.amount/100 | currency : "£") : ""}}
-					</div>
-					<div class="item expense">
-						{{e.amount<=0 ? (-e.amount/100 | currency : "£") : ""}}
-					</div>
-					<div ng-if="e.categorisation" class="item category">
-						{{e.categorisation[0]}} - {{e.categorisation[1]}}
-					</div>
-					<div ng-if="!e.categorisation" class="item category">
-						{{t.autoCategorisation[0]}} - {{t.autoCategorisation[1]}}
+				<style>
+				.transaction-details {
+					margin:1em auto;
+					max-width:800px;
+				}
+				.transaction-details .transaction-row:nth-child(3n) {
+					border-bottom:1px dashed #e0e0e0;
+				}
+				.transaction-details .log-row {
+					font-size:0.8em;
+					display:flex;
+					justify-content: space-between;
+				}
+				.transaction-details .log-row .transaction-item {
+					flex-shrink:0;
+					flex-grow:0;
+					line-height:1.2em;
+				}
+				.transaction-details .log-row .transaction-item.date {
+					flex-basis:130px;
+				}
+				.transaction-details .log-row .transaction-item.description {
+					flex-grow:1;
+				}
+				.transaction-details .log-row .transaction-item.amount {
+					flex-basis:100px;
+					text-align:right;
+				}
+				</style>
+				<div class="transaction-details">
+					<div>
+						<div class="transaction-row" ng-repeat="t in currentYearTransactions(activeCategory, activeLabel) track by t.id">
+							<div class="log-row" ng-repeat="e in t.entries track by $index">
+								<div class="transaction-item date">
+									<span ng-if="$index==0">
+										{{ t.date | dateformat }}
+									</span>
+								</div>
+								<div class="transaction-item description">
+									<span>{{e.description ? e.description : t.bankDescription}}</span>
+									<span class="additional-description" ng-if="e.description &amp;&amp; t.bankDescription">{{t.bankDescription}}</span>
+								</div>
+								<div class="transaction-item amount income">
+									{{e.amount>0 ? (e.amount/100 | currency : "£") : ""}}
+								</div>
+								<div class="transaction-item amount expense">
+									{{e.amount<=0 ? (-e.amount/100 | currency : "£") : ""}}
+								</div>
+<!-- 								<div ng-if="e.categorisation" class="transaction-item category">
+									{{e.categorisation[0]}} - {{e.categorisation[1]}}
+								</div>
+								<div ng-if="!e.categorisation" class="transaction-item category">
+									{{t.autoCategorisation[0]}} - {{t.autoCategorisation[1]}}
+								</div>
+ -->
+ 							</div>
+						</div>
 					</div>
 				</div>
-			</div>
-		</div>
-	</div>
- -->
+
 				<div class="header">
 					Matchers
 					<i ng-if="activeCategory && activeLabel" ng-click="addMatcher()" class="icon plus button"></i>
