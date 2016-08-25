@@ -14,16 +14,18 @@ App.controller("categoriesCtrl", [
 		}
 
 		// this is all a bit hideous
-		$scope.ALL = "__ALL__";
-		$scope.CAT = "__CATEGORISED__";
-		$scope.UNCAT = "__UNCATEGORISED__";
+		$scope.ALLLAB = "All Labels";
+		$scope.ALLCAT = "All Categories";
+		$scope.CAT = "All Categorised";
+		$scope.UNCAT = "All Uncategorised";
 		var magic_constants = {}
-		magic_constants[$scope.ALL] = $scope.ALL
+		magic_constants[$scope.ALLCAT] = $scope.ALLCAT
+		magic_constants[$scope.ALLLAB] = $scope.ALLLAB
 		magic_constants[$scope.CAT] = $scope.CAT
 		magic_constants[$scope.UNCAT] = $scope.UNCAT
 		// end hideous
 
-		$scope.activeCategory = $stateParams.category ? $stateParams.category : $scope.ALL;
+		$scope.activeCategory = $stateParams.category ? $stateParams.category : $scope.ALLCAT;
 		$scope.activeLabel = $stateParams.label ? $stateParams.label : null;;
 		$scope.activeBudgetIndex = null;
 
@@ -52,13 +54,13 @@ App.controller("categoriesCtrl", [
 			$scope.categoryDetails = angular.copy(CATEGORIES)
 
 			if (!$scope.activeCategory || (!magic_constants[$scope.activeCategory] && !$scope.categoryLabels[$scope.activeCategory])) {
-				$scope.activeCategory = $scope.ALL
+				$scope.activeCategory = $scope.ALLCAT
 			}
 			if (magic_constants[$scope.activeCategory]) {
 				$scope.activeLabel = null;
 			} else {
 				if (!$scope.activeLabel || !$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel]) {
-					$scope.activeLabel = $scope.ALL;
+					$scope.activeLabel = $scope.ALLLAB;
 				}
 			}
 
@@ -72,10 +74,10 @@ App.controller("categoriesCtrl", [
 			}
 			if ($scope.categories[categoryIndex]) {
 				if ($scope.categories[categoryIndex].name == $scope.activeCategory) {
-					$scope.activeCategory = $scope.ALL
+					$scope.activeCategory = $scope.ALLCAT
 				} else {
 					$scope.activeCategory = $scope.categories[categoryIndex].name
-					$scope.activeLabel = $scope.ALL
+					$scope.activeLabel = $scope.ALLLAB
 				}
 			}
 		}
@@ -89,7 +91,7 @@ App.controller("categoriesCtrl", [
 				$scope.categoryLabels[$scope.activeCategory][labelIndex])
 			{
 				if ($scope.categoryLabels[$scope.activeCategory][labelIndex].name == $scope.activeLabel) {
-					$scope.activeLabel = $scope.ALL
+					$scope.activeLabel = $scope.ALLLAB
 				} else {
 					$scope.activeLabel = $scope.categoryLabels[$scope.activeCategory][labelIndex].name
 				}
@@ -386,8 +388,37 @@ App.controller("categoriesCtrl", [
 		}
 
 		$scope.amountCache = {}
+		$scope.transactionCache = {}
 		$scope.currentYearAmounts = function(category, label) {
 			return amountsFor("CURRENT_YEAR", category, label)
+		}
+		$scope.currentYearTransactions = function(category, label) {
+			var when = "CURRENT_YEAR"
+			if (!$scope.transactionCache[when]) {
+				$scope.transactionCache[when] = {}
+			}
+			if (!$scope.transactionCache[when][category]) {
+				$scope.transactionCache[when][category] = {}
+			}
+			if (!$scope.transactionCache[when][category][label]) {
+				$scope.transactionCache[when][category][label] = []
+
+				var promise
+				if (category === $scope.UNCAT) {
+					promise = LOCAL_DATA[when].getUncategorisedTransactions()
+				} else if (category === $scope.ALLCAT) {
+					promise = LOCAL_DATA[when].getCategorisedTransactions()
+				} else if (category === $scope.CAT) {
+					promise = LOCAL_DATA[when].getAllTransactions()
+				} else {
+					promise = LOCAL_DATA[when].getTransactionsForCategoryLabel(category, (label === $scope.ALLLAB ? null : label))
+				}
+
+				promise.then(function(transactions) {
+					$scope.transactionCache[when][category][label] = transactions
+				})
+			}
+			return $scope.transactionCache[when][category][label]
 		}
 		$scope.previousYearAmounts = function(category, label) {
 			return amountsFor("PREVIOUS_YEAR", category, label)
@@ -405,12 +436,12 @@ App.controller("categoriesCtrl", [
 				var promise
 				if (category === $scope.UNCAT) {
 					promise = LOCAL_DATA[when].getAmountsByDayForUncategorised()
-				} else if (category === $scope.ALL) {
+				} else if (category === $scope.ALLCAT) {
 					promise = LOCAL_DATA[when].getAmountsByDayForCategorised()
 				} else if (category === $scope.CAT) {
 					promise = LOCAL_DATA[when].getAmountsByDayForAll()
 				} else {
-					promise = LOCAL_DATA[when].getAmountsByDayForCategoryLabel(category, (label === $scope.ALL ? null : label))
+					promise = LOCAL_DATA[when].getAmountsByDayForCategoryLabel(category, (label === $scope.ALLLAB ? null : label))
 				}
 
 				promise.then(function(amounts) {
@@ -429,6 +460,7 @@ App.controller("categoriesCtrl", [
 				cancelNotifier()
 			}
 			$scope.amountCache = {}
+			$scope.transactionCache = {}
 			$scope.year = YEAR.year()
 			LOCAL_DATA = {
 				CURRENT_YEAR: DATA(YEAR.year()),

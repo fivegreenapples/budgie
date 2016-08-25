@@ -9,8 +9,8 @@
 			<div class="item-container">
 				<div class="spacer"></div>
 				<div class="item category" 
-				     ng-class="{active:activeCategory===ALL}"
-				     ng-click="$state.go('categories.category', {category:ALL});chooseCategory(ALL)">
+				     ng-class="{active:activeCategory===ALLCAT}"
+				     ng-click="$state.go('categories.category', {category:ALLCAT});chooseCategory(ALLCAT)">
 					Everything
 				</div>
 				<div class="spacer"></div>
@@ -36,7 +36,7 @@
 				<div ng-repeat-end class="spacer"></div>
 			</div>
 		</div>
-		<div class="column labels" ng-if="activeCategory && activeCategory!=UNCAT && activeCategory!=CAT && activeCategory!=ALL" >
+		<div class="column labels" ng-if="activeCategory && activeCategory!=UNCAT && activeCategory!=CAT && activeCategory!=ALLCAT" >
 			<div class="header">
 				Labels
 				<i ng-click="addLabel()" class="icon plus button"></i>
@@ -44,8 +44,8 @@
 			<div class="item-container">
 				<div class="spacer"></div>
 				<div class="item label"
-				     ng-class="{active:activeLabel==ALL}"
-				     ng-click="$state.go('categories.category.label', {category:activeCategory,label:ALL});chooseLabel(ALL)">
+				     ng-class="{active:activeLabel==ALLLAB}"
+				     ng-click="$state.go('categories.category.label', {category:activeCategory,label:ALLLAB});chooseLabel(ALLLAB)">
 					All Labels
 				</div>
 				<div class="spacer"></div>
@@ -62,7 +62,7 @@
 		<div class="column details">
 			<div class="item-container">
 				<div class="header">
-					Transactions
+					Transactions for <span style="font-weight:400;">{{activeCategory}} &rsaquo; {{activeLabel}}</span>
 					<i ng-if="activeCategory && activeLabel" ng-click="addBudget()" class="icon plus button"></i>
 				</div>
 				<div>
@@ -86,6 +86,44 @@
 				</div>
 
 
+<!-- 	<div class="transaction-log">
+		<div class="log-body">
+			<div class="log-row header-row">
+				<div class="item date">Date</div>
+				<div class="item description">Description</div>
+				<div class="item income">In</div>
+				<div class="item expense">Out</div>
+				<div class="item category">Category</div>
+			</div>
+			<div ng-repeat="t in currentYearTransactions(activeCategory, activeLabel) track by t.id" ng-init="transIndex = $index">
+				<div class="log-row" ng-repeat="e in t.entries track by $index">
+					<div class="item date">
+						<span ng-if="$index==0">
+							{{ t.date | dateformat }}
+							<i class="icon small popover button" ng-click="showTransactionPopover($event, t.id, transIndex)"></i>
+						</span>
+					</div>
+					<div class="item description">
+						<span>{{e.description ? e.description : t.bankDescription}}</span>
+						<span class="additional-description" ng-if="e.description &amp;&amp; t.bankDescription">{{t.bankDescription}}</span>
+					</div>
+					<div class="item income">
+						{{e.amount>0 ? (e.amount/100 | currency : "£") : ""}}
+					</div>
+					<div class="item expense">
+						{{e.amount<=0 ? (-e.amount/100 | currency : "£") : ""}}
+					</div>
+					<div ng-if="e.categorisation" class="item category">
+						{{e.categorisation[0]}} - {{e.categorisation[1]}}
+					</div>
+					<div ng-if="!e.categorisation" class="item category">
+						{{t.autoCategorisation[0]}} - {{t.autoCategorisation[1]}}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+ -->
 				<div class="header">
 					Matchers
 					<i ng-if="activeCategory && activeLabel" ng-click="addMatcher()" class="icon plus button"></i>
