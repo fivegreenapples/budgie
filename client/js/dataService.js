@@ -13,12 +13,33 @@ App.factory("data", [
 		function amountsByDayForTransactions(year, transactions) {
 			var amounts = zeroesForYear(year)
 			transactions.forEach(function(transaction) {
-				var transactionDayOfYear = moment(transaction.date).dayOfYear()
-				transaction.entries.forEach(function(entry) {
-					amounts[transactionDayOfYear-1] += entry.amount
-				})
+				amounts[moment(transaction.date).dayOfYear()-1] += transaction.amount
 			})
 			return amounts
+		}
+		function transactionToEntries(t) {
+			return t.entries.map(function(e, index) {
+				return {
+					id: t.id+":"+index,
+					date: t.date,
+					description: e.description ? e.description : t.bankDescription,
+					amount: e.amount,
+					category: e.categorisation ? e.categorisation[0] : (t.autoCategorisation ? t.autoCategorisation[0] : null),
+					label: e.categorisation ? e.categorisation[1] : (t.autoCategorisation ? t.autoCategorisation[1] : null),
+				}
+			})
+		}
+		function accountsToTransactions(accounts) {
+			return accounts.reduce(function(previous, account) {
+				return previous.concat(
+					account
+						.transactions
+						.map(transactionToEntries)
+						.reduce(function(prev, entries) {
+							return prev.concat(entries)
+						}, [])
+					)
+			}, [])
 		}
 
 		return function(theYear) {
@@ -375,52 +396,23 @@ App.factory("data", [
 						return $q.reject("LABEL_NOT_FOUND")
 					}
 
-					return DATA.accounts.reduce(function(previous, account) {
-						return previous.concat(
-							account.transactions.filter(function(transaction) {
-								return transaction.entries.reduce(function(matched, entry) {
-									return matched || ((entry.categorisation && 
-									      entry.categorisation[0] === category &&
-									      (noLabel || entry.categorisation[1] === label)) ||
-									    (!entry.categorisation && 
-									      transaction.autoCategorisation && 
-									      transaction.autoCategorisation[0] === category &&
-									      (noLabel || transaction.autoCategorisation[1] === label)))
-								}, false)
-							})
-						)
-					}, [])
+					return accountsToTransactions(DATA.accounts).filter(function(entry) {
+						return entry.category === category &&
+						       (noLabel || entry.label === label)
+					})
 				}),
 				getUncategorisedTransactions: whenLoaded(function() {
-					return DATA.accounts.reduce(function(previous, account) {
-						return previous.concat(
-							account.transactions.filter(function(transaction) {
-								if (transaction.autoCategorisation) return false
-								return transaction.entries.reduce(function(matched, entry) {
-									return matched || !entry.categorisation
-								}, false)
-							})
-						)
-					}, [])
+					return accountsToTransactions(DATA.accounts).filter(function(entry) {
+						return entry.category === null
+					})
 				}),
 				getCategorisedTransactions: whenLoaded(function() {
-					return DATA.accounts.reduce(function(previous, account) {
-						return previous.concat(
-							account.transactions.filter(function(transaction) {
-								if (transaction.autoCategorisation) return true
-								return transaction.entries.reduce(function(matched, entry) {
-									return matched && entry.categorisation
-								}, true)
-							})
-						)
-					}, [])
+					return accountsToTransactions(DATA.accounts).filter(function(entry) {
+						return entry.category !== null && entry.label !== null
+					})
 				}),
 				getAllTransactions: whenLoaded(function() {
-					return DATA.accounts.reduce(function(previous, account) {
-						return previous.concat(
-							account.transactions
-						)
-					}, [])
+					return accountsToTransactions(DATA.accounts)
 				}),
 
 
@@ -445,6 +437,42 @@ App.factory("data", [
 					})
 				}),
 
+				getStats: whenLoaded(function() {
+					var stats = {
+						"Everything": { amount: 0, number: 0 },
+						"All Categorised": { amount: 0, number: 0 },
+						"All Uncategorised": { amount: 0, number: 0 },
+						"categories" : {}
+					}
+					angular.forEach(DATA.categories, function(catInfo, category) {
+						stats.categories[category] = {
+							amount: 0,
+							number: 0,
+							labels: {}
+						}
+						angular.forEach(catInfo, function(labelInfo, label) {
+							stats.categories[category].labels[label] = { amount: 0, number: 0 }
+						})
+					}) 
+					return service.getAllTransactions().then(function(transactions) {
+						transactions.forEach(function(t) {
+							stats.Everything.amount += t.amount
+							stats.Everything.number += 1
+							if (t.category === null) {
+								stats["All Uncategorised"].amount += t.amount
+								stats["All Uncategorised"].number += 1
+							} else {
+								stats["All Categorised"].amount += t.amount
+								stats["All Categorised"].number += 1
+								stats.categories[t.category].amount += t.amount
+								stats.categories[t.category].number += 1
+								stats.categories[t.category].labels[t.label].amount += t.amount
+								stats.categories[t.category].labels[t.label].number += 1
+							}
+						})
+						return stats
+					})
+				}),
 
 				renameCategory: whenLoaded(function(oldVal, newVal) {
 					if (!DATA.categories[oldVal]) {

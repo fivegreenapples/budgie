@@ -9,34 +9,34 @@
 			<div class="item-container">
 				<div class="spacer"></div>
 				<div class="item category" 
-				     ng-class="{active:activeCategory===ALLCAT}"
-				     ng-click="$state.go('categories.category', {category:ALLCAT});chooseCategory(ALLCAT)">
-					Everything
-				</div>
-				<div class="spacer"></div>
-				<div class="item category" 
-				     ng-class="{active:activeCategory===UNCAT}"
-				     ng-click="$state.go('categories.category', {category:UNCAT});chooseCategory(UNCAT)">
-					Uncategorised
+				     ng-class="{active:activeCategory===ALL}"
+				     ng-click="$state.go('categories.category', {category:ALL});chooseCategory(ALL)">
+					Everything {{ magicStats[ALL].amount/100 | currency : "£" }}
 				</div>
 				<div class="spacer"></div>
 				<div class="item category" 
 				     ng-class="{active:activeCategory===CAT}"
 				     ng-click="$state.go('categories.category', {category:CAT});chooseCategory(CAT)">
-					Categorised
+					Categorised {{ magicStats[CAT].amount/100 | currency : "£" }}
+				</div>
+				<div class="spacer"></div>
+				<div class="item category" 
+				     ng-class="{active:activeCategory===UNCAT}"
+				     ng-click="$state.go('categories.category', {category:UNCAT});chooseCategory(UNCAT)">
+					Uncategorised {{ magicStats[UNCAT].amount/100 | currency : "£" }}
 				</div>
 				<div class="spacer"></div>
 				<div class="item category" 
 				     ng-repeat-start="category in categories"
 				     ng-class="{active:activeCategory==category.name}"
 				     ng-click="$state.go('categories.category', {category:category.name});chooseCategory($index)">
-					{{ category.name }}
+					{{ category.name }} {{ category.amount/100 | currency : "£" }}
 					<i class="icon popover" ng-click="showCategoryPopoverMenu($event)"></i>
 				</div>
 				<div ng-repeat-end class="spacer"></div>
 			</div>
 		</div>
-		<div class="column labels" ng-if="activeCategory && activeCategory!=UNCAT && activeCategory!=CAT && activeCategory!=ALLCAT" >
+		<div class="column labels" ng-if="activeCategory && activeCategory!=UNCAT && activeCategory!=CAT && activeCategory!=ALL" >
 			<div class="header">
 				Labels
 				<i ng-click="addLabel()" class="icon plus button"></i>
@@ -46,14 +46,14 @@
 				<div class="item label"
 				     ng-class="{active:activeLabel==ALLLAB}"
 				     ng-click="$state.go('categories.category.label', {category:activeCategory,label:ALLLAB});chooseLabel(ALLLAB)">
-					All Labels
+					All Labels 
 				</div>
 				<div class="spacer"></div>
 				<div class="item label"
 				     ng-repeat-start="label in categoryLabels[activeCategory]"
 				     ng-class="{active:activeLabel==label.name}"
 				     ng-click="$state.go('categories.category.label', {category:activeCategory,label:label.name});chooseLabel($index)">
-					{{ label.name }}
+					{{ label.name }} {{ label.amount/100 | currency : "£" }}
 					<i class="icon popover" ng-click="showLabelPopoverMenu($event)"></i>
 				</div>
 				<div ng-repeat-end class="spacer"></div>
@@ -61,11 +61,20 @@
 		</div>
 		<div class="column details">
 			<div class="item-container">
+
 				<div class="header">
-					Transactions for <span style="font-weight:400;">{{activeCategory}} &rsaquo; {{activeLabel}}</span>
-					<i ng-if="activeCategory && activeLabel" ng-click="addBudget()" class="icon plus button"></i>
+					{{activeCategory}} &rsaquo; {{activeLabel}}
+					<!-- <i ng-if="activeCategory && activeLabel" ng-click="addBudget()" class="icon plus button"></i> -->
 				</div>
-				<div>
+				<div class="tab-container" ng-if="activeCategory && activeCategory!=UNCAT && activeCategory!=CAT && activeCategory!=ALL">
+					<div class="tab" ng-class="{active:activeDetail=='transactions'}" ng-click="chooseDetail('transactions')">Transactions</div>
+					<div class="tab" ng-class="{active:activeDetail=='budgets'}" ng-click="chooseDetail('budgets')">Budgets</div>
+					<div class="tab" ng-class="{active:activeDetail=='matchers'}" ng-click="chooseDetail('matchers')">Matchers</div>
+				</div>
+
+
+				<div ng-if="!activeDetail || activeDetail=='transactions'">
+					<div class="header" ng-if="activeDetail">Transactions</div>
 					<budget-graph amounts="previousYearAmounts(activeCategory, activeLabel)" year="year-1" label="(year-1)+' Transactions'"></budget-graph>
 					<budget-graph amounts="currentYearAmounts(activeCategory, activeLabel)" year="year" label="(year)+' Transactions'"></budget-graph>
 					<div ng-if="activeCategory && 
@@ -83,85 +92,59 @@
 						</div>
 						<div ng-repeat-end class="spacer"></div>
 					</div>
-				</div>
 
 
-				<style>
-				.transaction-details {
-					margin:1em auto;
-					max-width:800px;
-				}
-				.transaction-details .transaction-row:nth-child(3n) {
-					border-bottom:1px dashed #e0e0e0;
-				}
-				.transaction-details .log-row {
-					font-size:0.8em;
-					display:flex;
-					justify-content: space-between;
-				}
-				.transaction-details .log-row .transaction-item {
-					flex-shrink:0;
-					flex-grow:0;
-					line-height:1.2em;
-				}
-				.transaction-details .log-row .transaction-item.date {
-					flex-basis:130px;
-				}
-				.transaction-details .log-row .transaction-item.description {
-					flex-grow:1;
-				}
-				.transaction-details .log-row .transaction-item.amount {
-					flex-basis:100px;
-					text-align:right;
-				}
-				</style>
-				<div class="transaction-details">
-					<div>
-						<div class="transaction-row" ng-repeat="t in currentYearTransactions(activeCategory, activeLabel) track by t.id">
-							<div class="log-row" ng-repeat="e in t.entries track by $index">
+					<div class="transaction-details">
+						<div>
+							<div class="transaction-row" ng-repeat="t in currentYearTransactions(activeCategory, activeLabel) track by t.id">
 								<div class="transaction-item date">
-									<span ng-if="$index==0">
-										{{ t.date | dateformat }}
-									</span>
+									{{ t.date | dateformat }}
 								</div>
 								<div class="transaction-item description">
-									<span>{{e.description ? e.description : t.bankDescription}}</span>
-									<span class="additional-description" ng-if="e.description &amp;&amp; t.bankDescription">{{t.bankDescription}}</span>
+									{{t.description}}
 								</div>
 								<div class="transaction-item amount income">
-									{{e.amount>0 ? (e.amount/100 | currency : "£") : ""}}
+									{{t.amount>0 ? (t.amount/100 | currency : "£") : ""}}
 								</div>
 								<div class="transaction-item amount expense">
-									{{e.amount<=0 ? (-e.amount/100 | currency : "£") : ""}}
+									{{t.amount<=0 ? (-t.amount/100 | currency : "£") : ""}}
 								</div>
-<!-- 								<div ng-if="e.categorisation" class="transaction-item category">
-									{{e.categorisation[0]}} - {{e.categorisation[1]}}
+								<div class="transaction-item category">
+									{{t.category}} - {{t.label}}
 								</div>
-								<div ng-if="!e.categorisation" class="transaction-item category">
-									{{t.autoCategorisation[0]}} - {{t.autoCategorisation[1]}}
-								</div>
- -->
- 							</div>
+
+							</div>
 						</div>
 					</div>
 				</div>
 
-				<div class="header">
-					Matchers
-					<i ng-if="activeCategory && activeLabel" ng-click="addMatcher()" class="icon plus button"></i>
+				<div ng-if="activeDetail=='budgets'">
+					<div class="header">Budgets</div>
 				</div>
-				<div ng-if="activeCategory && activeLabel && categoryDetails[activeCategory][activeLabel].matchers.length" class="spacer"></div>
-				<div>
-					<div class="item match"
-					     ng-if="activeCategory && activeLabel"
-					     ng-repeat-start="match in categoryDetails[activeCategory][activeLabel].matchers"
-					     ng-class="{active:activeMatcher==match}"
-					     ng-click="chooseMatcher($index)">
-						{{ matcherMapping[match.type] }} <span class="matchtext">{{ match.match }}</span>
-						<i class="icon popover"></i>
+
+				<div ng-if="activeDetail=='matchers'">
+
+					<div class="header">
+						Matchers
+						<i ng-if="activeCategory && activeLabel" ng-click="addMatcher()" class="icon plus button"></i>
 					</div>
-					<div ng-repeat-end class="spacer"></div>
+					<div ng-if="activeCategory && activeLabel && categoryDetails[activeCategory][activeLabel].matchers.length" class="spacer"></div>
+					<div>
+						<div class="item match"
+						     ng-if="activeCategory && activeLabel"
+						     ng-repeat-start="match in categoryDetails[activeCategory][activeLabel].matchers"
+						     ng-class="{active:activeMatcher==match}"
+						     ng-click="chooseMatcher($index)">
+							{{ matcherMapping[match.type] }} <span class="matchtext">{{ match.match }}</span>
+							<i class="icon popover"></i>
+						</div>
+						<div ng-repeat-end class="spacer"></div>
+					</div>
+
 				</div>
+
+
+
 			</div>
 		</div>
 	</div>

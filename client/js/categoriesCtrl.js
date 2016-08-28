@@ -2,10 +2,11 @@ App.controller("categoriesCtrl", [
 	"$rootScope",
 	"$scope",
 	"$stateParams",
+	"$q",
 	"year",
 	"data",
 	"modal",
-	function($rootScope, $scope, $stateParams, YEAR, DATA, MODAL) {
+	function($rootScope, $scope, $stateParams, $q, YEAR, DATA, MODAL) {
 
 		$scope.matcherMapping = {
 			start: "Starts with:",
@@ -14,29 +15,35 @@ App.controller("categoriesCtrl", [
 		}
 
 		// this is all a bit hideous
+		$scope.ALL = "Everything";
 		$scope.ALLLAB = "All Labels";
-		$scope.ALLCAT = "All Categories";
 		$scope.CAT = "All Categorised";
 		$scope.UNCAT = "All Uncategorised";
 		var magic_constants = {}
-		magic_constants[$scope.ALLCAT] = $scope.ALLCAT
+		magic_constants[$scope.ALL] = $scope.ALL
 		magic_constants[$scope.ALLLAB] = $scope.ALLLAB
 		magic_constants[$scope.CAT] = $scope.CAT
 		magic_constants[$scope.UNCAT] = $scope.UNCAT
 		// end hideous
 
-		$scope.activeCategory = $stateParams.category ? $stateParams.category : $scope.ALLCAT;
+		$scope.activeCategory = $stateParams.category ? $stateParams.category : $scope.ALL;
 		$scope.activeLabel = $stateParams.label ? $stateParams.label : null;;
+		$scope.activeDetail = null;
 		$scope.activeBudgetIndex = null;
 
 		$scope.refreshCategories = function() {
 			$scope.categories = []
 			$scope.categoryLabels = {}
 			$scope.categoryDetails = {}
+			$scope.magicStats = {}
+			$scope.magicStats[$scope.ALL] = STATS[$scope.ALL]
+			$scope.magicStats[$scope.CAT] = STATS[$scope.CAT]
+			$scope.magicStats[$scope.UNCAT] = STATS[$scope.UNCAT]
 
 			angular.forEach(CATEGORIES, function(val, key) {
 				$scope.categories.push({
-					name: key
+					name: key,
+					amount: STATS.categories[key].amount
 				})
 			})
 			$scope.categories.sort(function(A, B) { return A.name.toLowerCase().localeCompare(B.name.toLowerCase()) })
@@ -45,7 +52,8 @@ App.controller("categoriesCtrl", [
 				$scope.categoryLabels[category.name] = []
 				angular.forEach(CATEGORIES[category.name], function(val, key) {
 					$scope.categoryLabels[category.name].push({
-						name: key
+						name: key,
+						amount: STATS.categories[category.name].labels[key].amount
 					})
 				})
 				$scope.categoryLabels[category.name].sort(function(A, B) { return A.name.toLowerCase().localeCompare(B.name.toLowerCase()) })
@@ -54,7 +62,7 @@ App.controller("categoriesCtrl", [
 			$scope.categoryDetails = angular.copy(CATEGORIES)
 
 			if (!$scope.activeCategory || (!magic_constants[$scope.activeCategory] && !$scope.categoryLabels[$scope.activeCategory])) {
-				$scope.activeCategory = $scope.ALLCAT
+				$scope.activeCategory = $scope.ALL
 			}
 			if (magic_constants[$scope.activeCategory]) {
 				$scope.activeLabel = null;
@@ -70,11 +78,12 @@ App.controller("categoriesCtrl", [
 			if (magic_constants[categoryIndex]) {
 				$scope.activeCategory = magic_constants[categoryIndex]
 				$scope.activeLabel = null
+				$scope.activeDetail = null
 				return
 			}
 			if ($scope.categories[categoryIndex]) {
 				if ($scope.categories[categoryIndex].name == $scope.activeCategory) {
-					$scope.activeCategory = $scope.ALLCAT
+					$scope.activeCategory = $scope.ALL
 				} else {
 					$scope.activeCategory = $scope.categories[categoryIndex].name
 					$scope.activeLabel = $scope.ALLLAB
@@ -110,6 +119,9 @@ App.controller("categoriesCtrl", [
 					$scope.activeBudgetIndex = budgetIndex
 				}
 			}
+		}
+		$scope.chooseDetail = function(detail) {
+			$scope.activeDetail = detail
 		}
 
 		$scope.addCategory = function(initialValue) {
@@ -387,88 +399,91 @@ App.controller("categoriesCtrl", [
 			})
 		}
 
-		$scope.amountCache = {}
-		$scope.transactionCache = {}
-		$scope.currentYearAmounts = function(category, label) {
-			return amountsFor("CURRENT_YEAR", category, label)
+		var caches = {}
+		function cacheFor(when, category, label) {
+			var cacheKey = [when,category,label].join(":")
+			if (!(cacheKey in caches)) {
+				caches[cacheKey] = {}
+			}
+			return caches[cacheKey]
 		}
-		$scope.currentYearTransactions = function(category, label) {
-			var when = "CURRENT_YEAR"
-			if (!$scope.transactionCache[when]) {
-				$scope.transactionCache[when] = {}
+		function amountsFor(when, category, label) {
+			var cache = cacheFor(when, category, label)
+			if (cache.amounts) {
+				return cache.amounts
 			}
-			if (!$scope.transactionCache[when][category]) {
-				$scope.transactionCache[when][category] = {}
+
+			cache.amounts = []
+
+			var promise
+			if (category === $scope.UNCAT) {
+				promise = LOCAL_DATA[when].getAmountsByDayForUncategorised()
+			} else if (category === $scope.ALL) {
+				promise = LOCAL_DATA[when].getAmountsByDayForAll()
+			} else if (category === $scope.CAT) {
+				promise = LOCAL_DATA[when].getAmountsByDayForCategorised()
+			} else {
+				promise = LOCAL_DATA[when].getAmountsByDayForCategoryLabel(category, (label === $scope.ALLLAB ? null : label))
 			}
-			if (!$scope.transactionCache[when][category][label]) {
-				$scope.transactionCache[when][category][label] = []
 
-				var promise
-				if (category === $scope.UNCAT) {
-					promise = LOCAL_DATA[when].getUncategorisedTransactions()
-				} else if (category === $scope.ALLCAT) {
-					promise = LOCAL_DATA[when].getCategorisedTransactions()
-				} else if (category === $scope.CAT) {
-					promise = LOCAL_DATA[when].getAllTransactions()
-				} else {
-					promise = LOCAL_DATA[when].getTransactionsForCategoryLabel(category, (label === $scope.ALLLAB ? null : label))
-				}
+			promise.then(function(amounts) {
+				cache.amounts = amounts
+			})
+		}
+		function transactionsFor(when, category, label) {
+			var cache = cacheFor(when, category, label)
+			if (cache.transactions) {
+				return cache.transactions
+			}
 
-				promise.then(function(transactions) {
-					transactions.sort(function(a,b) {
-						var val = 0
-						val = a.date - b.date
-						if (val === 0) {
-							val = a.bankDescription.localeCompare(b.bankDescription)
-						}
-						return val;
-					})
-					$scope.transactionCache[when][category][label] = transactions
+			cache.transactions = []
+
+			var promise
+			if (category === $scope.UNCAT) {
+				promise = LOCAL_DATA[when].getUncategorisedTransactions()
+			} else if (category === $scope.ALL) {
+				promise = LOCAL_DATA[when].getAllTransactions()
+			} else if (category === $scope.CAT) {
+				promise = LOCAL_DATA[when].getCategorisedTransactions()
+			} else {
+				promise = LOCAL_DATA[when].getTransactionsForCategoryLabel(category, (label === $scope.ALLLAB ? null : label))
+			}
+
+			promise.then(function(transactions) {
+				transactions.sort(function(a,b) {
+					var val = 0
+					val = a.date - b.date
+					if (val === 0) {
+						val = a.description.localeCompare(b.description)
+					}
+					return val;
 				})
-			}
-			return $scope.transactionCache[when][category][label]
+				cache.transactions = transactions
+			})
 		}
 		$scope.previousYearAmounts = function(category, label) {
 			return amountsFor("PREVIOUS_YEAR", category, label)
 		}
-		function amountsFor(when, category, label) {
-			if (!$scope.amountCache[when]) {
-				$scope.amountCache[when] = {}
-			}
-			if (!$scope.amountCache[when][category]) {
-				$scope.amountCache[when][category] = {}
-			}
-			if (!$scope.amountCache[when][category][label]) {
-				$scope.amountCache[when][category][label] = []
-
-				var promise
-				if (category === $scope.UNCAT) {
-					promise = LOCAL_DATA[when].getAmountsByDayForUncategorised()
-				} else if (category === $scope.ALLCAT) {
-					promise = LOCAL_DATA[when].getAmountsByDayForCategorised()
-				} else if (category === $scope.CAT) {
-					promise = LOCAL_DATA[when].getAmountsByDayForAll()
-				} else {
-					promise = LOCAL_DATA[when].getAmountsByDayForCategoryLabel(category, (label === $scope.ALLLAB ? null : label))
-				}
-
-				promise.then(function(amounts) {
-					$scope.amountCache[when][category][label] = amounts
-				})
-			}
-			return $scope.amountCache[when][category][label]
+		$scope.previousYearTransactions = function(category, label) {
+			return transactionsFor("PREVIOUS_YEAR", category, label)
+		}
+		$scope.currentYearAmounts = function(category, label) {
+			return amountsFor("CURRENT_YEAR", category, label)
+		}
+		$scope.currentYearTransactions = function(category, label) {
+			return transactionsFor("CURRENT_YEAR", category, label)
 		}
 
 		var LOCAL_DATA = null
 		var cancelNotifier = null
 		var CATEGORIES
+		var STATS
 
 		YEAR.nowAndWhenChanged($scope, function() {
 			if (cancelNotifier) {
 				cancelNotifier()
 			}
-			$scope.amountCache = {}
-			$scope.transactionCache = {}
+			caches = {}
 			$scope.year = YEAR.year()
 			LOCAL_DATA = {
 				CURRENT_YEAR: DATA(YEAR.year()),
@@ -476,8 +491,12 @@ App.controller("categoriesCtrl", [
 			}
 
 			cancelNotifier = LOCAL_DATA.CURRENT_YEAR.nowAndWhenChanged($scope, function() {
-				LOCAL_DATA.CURRENT_YEAR.getAllCategoryData().then(function(categories) {
-					CATEGORIES = categories
+				$q.all({
+					categories: LOCAL_DATA.CURRENT_YEAR.getAllCategoryData(),
+					stats: LOCAL_DATA.CURRENT_YEAR.getStats()
+				}).then(function(res) {
+					CATEGORIES = res.categories
+					STATS = res.stats
 					$scope.refreshCategories();
 				})
 			})

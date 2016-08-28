@@ -49,6 +49,10 @@ App.directive("budgetGraph", function() {
 
 				function refreshVals(dailyAmounts) {
 					$scope.maxBarHeight = Math.log(10000);
+					if (!Array.isArray(dailyAmounts)) {
+						$scope.vals = []
+						return
+					}
 					$scope.vals = dailyAmounts
 						.reduce(function(prev, current, index) {
 							var useCurrent = Math.abs(current/100)
