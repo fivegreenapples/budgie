@@ -7,8 +7,8 @@
      x="0"
      y="0"
      width="742"
-     height="60"
-     viewBox="0, 0, 742, 60"
+     height="120"
+     viewBox="0, 0, 742, 120"
      preserveAspectRatio="none">
 	
 	<g>
@@ -18,7 +18,7 @@
 				<rect ng-repeat="m in tags.weekdays track by $index" 
 				      ng-attr-x="{{m * 2}}" 
 				      y="0" 
-				      height="50" 
+				      height="120" 
 				      width="2" 
 				      fill="#f9f9f9"></rect>
 			</g>
@@ -26,7 +26,7 @@
 				<rect ng-repeat="m in tags.weekenddays track by $index" 
 				      ng-attr-x="{{m * 2}}" 
 				      y="0" 
-				      height="50" 
+				      height="120" 
 				      width="2" 
 				      fill="#efefef"></rect>
 			</g>
@@ -34,22 +34,54 @@
 				<rect ng-repeat="m in tags.months track by $index" 
 				      ng-attr-x="{{m * 2}}" 
 				      y="0" 
-				      height="60" 
+				      height="120" 
 				      width="0.5" 
 				      fill="#999"></rect>
 			</g>
+			<g transform="translate(0,60) scale(1,-1)">
 
-			<g ng-attr-transform="translate(0,50) scale(1,-{{50/maxBarHeight}})">
-				<rect ng-repeat="v in vals track by $index" 
-				      ng-attr-x="{{(v.x * 2)-0.5}}" 
-				      y="0" 
-				      ng-attr-height="{{v.h}}" 
-				      width="3" 
-				      fill="#de2345"></rect>
+				<line x1="0" y1="-47.75" x2="742" y2="-47.75" stroke-width="0.5" stroke="#bbb" />
+				<line x1="0" y1="-35.75" x2="742" y2="-35.75" stroke-width="0.5" stroke="#bbb" />
+				<line x1="0" y1="-23.75" x2="742" y2="-23.75" stroke-width="0.5" stroke="#bbb" />
+				<line x1="0" y1="-11.75" x2="742" y2="-11.75" stroke-width="0.5" stroke="#bbb" />
+
+
+				<line x1="0" y1="11.75"  x2="742" y2="11.75"  stroke-width="0.5" stroke="#bbb" />
+				<line x1="0" y1="23.75"  x2="742" y2="23.75"  stroke-width="0.5" stroke="#bbb" />
+				<line x1="0" y1="35.75"  x2="742" y2="35.75"  stroke-width="0.5" stroke="#bbb" />
+				<line x1="0" y1="47.75"  x2="742" y2="47.75"  stroke-width="0.5" stroke="#bbb" />
+
+				<g ng-attr-transform="scale(1,{{60/maxBarHeight}})">
+					<rect ng-repeat="v in vals track by $index" 
+					      ng-attr-x="{{(v.x * 2)-0.5}}" 
+					      y="0" 
+					      ng-attr-height="{{v.h}}" 
+					      width="3" 
+					      fill="#1245dd"></rect>
+				</g>
+				<g ng-attr-transform="scale(1,-{{60/maxBarHeight}})">
+					<rect ng-repeat="v in negativeVals track by $index" 
+					      ng-attr-x="{{(v.x * 2)-0.5}}" 
+					      y="0" 
+					      ng-attr-height="{{v.h}}" 
+					      width="3" 
+					      fill="#de2345"></rect>
+				</g>
+
+				<!-- stick x-axis above everything -->
+				<line x1="-10" y1="-0.25" x2="742" y2="-0.25" stroke-width="0.5" stroke="#444" />
+				<!-- almost everything -->
+				<g ng-if="cumulativePath" ng-attr-transform="translate(0,-0.5) scale(1,{{60/maxBarHeight}})">
+					<path vector-effect="non-scaling-stroke" ng-attr-d="{{cumulativePath}}" stroke-width="1" stroke="#0b5" fill="none" />
+				</g>
+				<g ng-if="cumulativePathLinear" ng-attr-transform="translate(0,-0.5) scale(1,{{cumulativeLinearScale}})">
+					<path vector-effect="non-scaling-stroke" ng-attr-d="{{cumulativePathLinear}}" stroke-width="1" stroke="#0b5" fill="none" />
+				</g>
+
+
 			</g>
 		</g>
 
-		<line x1="0" y1="49.5" x2="742" y2="49.5" stroke-width="0.5" stroke="#999" />
 
 	</g>
 </svg>

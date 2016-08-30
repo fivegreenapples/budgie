@@ -45,25 +45,59 @@ App.directive("budgetGraph", function() {
 					}, true) // deep watch
 				}
 
-				// drawn as a logarithmic y-axis up to 10,000 pounds (note all values are in pence)
+				// drawn as a logarithmic y-axis +/- 100,000 pounds (note all incoming values are in pence)
+				$scope.maxBarHeight = Math.log(100000);
 
 				function refreshVals(dailyAmounts) {
-					$scope.maxBarHeight = Math.log(10000);
+					$scope.vals = []
+					$scope.negativeVals = []
+					$scope.cumulativePath = "M0,0 ";
+					$scope.cumulativePathLinear = "M0,0 ";
+					var currentCumulativeValue = 0, lastCumulativeValue = 100;
 					if (!Array.isArray(dailyAmounts)) {
-						$scope.vals = []
 						return
 					}
-					$scope.vals = dailyAmounts
-						.reduce(function(prev, current, index) {
-							var useCurrent = Math.abs(current/100)
-							if (useCurrent >= 1) {
-								prev.push({
-									x:index,
-									h:Math.log(useCurrent),
-								})
+					dailyAmounts.forEach(function(amount, index) {
+						var useCurrent = Math.abs(amount/100)
+						if (useCurrent >= 1) { // anything more than £1
+							var val = {
+								x:index,
+								h:Math.log(useCurrent)
 							}
-							return prev
-						}, [])
+							$scope[amount >= 0 ? "vals" : "negativeVals"].push(val)
+
+						}
+
+						currentCumulativeValue += amount;
+						if (currentCumulativeValue != lastCumulativeValue && Math.abs(currentCumulativeValue) >= 1) {
+
+							$scope.cumulativePathLinear += " L"+((2*index)+1)+","+lastCumulativeValue
+							$scope.cumulativePathLinear += " L"+((2*index)+1)+","+currentCumulativeValue
+
+
+							$scope.cumulativePath += " L"+((2*index)+1)+","+(lastCumulativeValue >= 0 ? "" : "-")+Math.log(Math.abs(lastCumulativeValue/100))
+							$scope.cumulativePath += " L"+((2*index)+1)+","+(currentCumulativeValue >= 0 ? "" : "-")+Math.log(Math.abs(currentCumulativeValue/100))
+							lastCumulativeValue = currentCumulativeValue
+						}
+
+					})
+					$scope.cumulativePath += " H732"
+					$scope.cumulativePathLinear += " H732"
+					$scope.cumulativeLinearScale = 60 / Math.pow(10, Math.ceil(Math.log10(Math.abs(currentCumulativeValue))))
+
+
+					// various experiments with logarithmic and linear cumulative lines
+					// removed for now
+					// linear looks better and is more useful, but appropriate scaling is tricky. especially when comparing 
+					// one year against another as you need a consistent scale for the comparison to be useful. As you need
+					// a scale that accounts for the peak amplitude not just the final number ,then you need all the data
+					// up front which implies a higher level analysis of the data.
+					//
+					// logarithmic cumulator line just trends to horizontal
+					// 
+					$scope.cumulativePath = false
+					$scope.cumulativePathLinear = false
+
 				}
 			}
 		]
