@@ -1,0 +1,30 @@
+<h1>{{ mode=="EDIT" ? "Configure a Matcher" : "Create a new Matcher" }}</h1>
+<p>A Matcher allows auto categorisation of bank transactions. The auto categorisation can be overriden for cases where there is not enough detail to fully categorise.</p>
+<div class="item-container">
+	<div class="item">
+		<span class="label">Matcher Type</span>
+		<span class="input">
+			<span class="select">
+				<select ng-options="opt.value as opt.label for opt in matcherTypes" ng-model="m.type" ng-change="validateType()"></select>
+			</span>
+		</span>
+		<span class="validation"></span>
+	</div>
+	<div class="item">
+		<span class="label" ng-switch="m.type">
+			<span ng-switch-when="exact">Matches</span>
+			<span ng-switch-when="start">Starts with</span>
+			<span ng-switch-when="regex">Regex</span>
+		</span>
+		<span class="input">
+			<span class="textbox">
+				<input ng-model="m.match">
+			</span>
+		</span>
+		<span class="validation">{{matchValidation}}</span>
+	</div>
+</div>
+<div class="button-container">
+	<span class="button red" ng-click="cancel()">Cancel</span>
+	<span class="button green" ng-click="validate() && save(m)">{{ mode=="EDIT" ? "Save" : "Add" }}</span>
+</div>

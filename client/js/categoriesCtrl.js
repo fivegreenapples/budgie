@@ -223,6 +223,24 @@ App.controller("categoriesCtrl", [
 				)
 			})
 		}
+		$scope.addMatcher = function() {
+			if (!$scope.activeCategory || 
+				!($scope.activeCategory in $scope.categoryLabels) ||
+				!$scope.activeLabel ||
+				!($scope.activeLabel in $scope.categoryDetails[$scope.activeCategory])) {
+				return
+			}
+			MODAL.addMatcherForm().then(function(data) {
+				console.log(data)
+				$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel].matchers.push(data)
+				LOCAL_DATA.CURRENT_YEAR.setCategoryLabelDetails(
+					$scope.activeCategory, 
+					$scope.activeLabel, 
+					$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel]
+				)
+			})
+		}
+
 
 		$scope.showCategoryPopoverMenu = function(ev) {
 			ev.stopPropagation()

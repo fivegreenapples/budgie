@@ -85,4 +85,9 @@
 		<div class="form" budget-form budget="layer.data" year="layer.year" save="layer.onSave" cancel="layer.onCancel"></div>
 		<div class="form-footer"></div>
 	</div>
+	<div class="matcher-form-container form-container" ng-if="layer.type=='MATCHERFORM'">
+		<div class="form-header"></div>
+		<div class="form" matcher-form matcher="layer.data" save="layer.onSave" cancel="layer.onCancel"></div>
+		<div class="form-footer"></div>
+	</div>
 </div>

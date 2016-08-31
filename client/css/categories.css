@@ -25,7 +25,9 @@
 .transaction-details .transaction-row {
 	font-size:0.8em;
 	display:flex;
-	justify-content: space-between;
+	flex-wrap:nowrap;
+	justify-content:space-around;
+	align-items:flex-start;
 }
 .transaction-details .transaction-row:nth-child(3n) {
 	border-bottom:1px dashed #e0e0e0;
@@ -34,14 +36,22 @@
 	flex-shrink:0;
 	flex-grow:0;
 	line-height:1.2em;
+	overflow:hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 .transaction-details .transaction-row .transaction-item.date {
-	flex-basis:130px;
+	flex-basis:100px;
 }
 .transaction-details .transaction-row .transaction-item.description {
-	flex-grow:1;
+	flex-basis:250px;
 }
 .transaction-details .transaction-row .transaction-item.amount {
-	flex-basis:100px;
+	flex-basis:70px;
 	text-align:right;
+}
+.transaction-details .transaction-row .transaction-item.category {
+	flex-grow:1;
+	flex-shrink:1;
+	margin-left:1em;
 }

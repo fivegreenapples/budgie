@@ -138,6 +138,24 @@ App.service("modal", [
 			MODALS.push(modal)
 			triggerWatchers()
 			return deferred.promise
+		},
+		addMatcherForm: function(matcher) {
+			var deferred = $q.defer()
+			var modal = {
+				type: "MATCHERFORM",
+				data: matcher,
+				onSave: function(newMatcher) {
+					deferred.resolve(newMatcher)
+					service.pop()
+				},
+				onCancel: function() {
+					deferred.reject()
+					service.pop()
+				}
+			}
+			MODALS.push(modal)
+			triggerWatchers()
+			return deferred.promise
 		}
 
 	}

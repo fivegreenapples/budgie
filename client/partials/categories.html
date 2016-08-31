@@ -95,25 +95,23 @@
 
 
 					<div class="transaction-details">
-						<div>
-							<div class="transaction-row" ng-repeat="t in currentYearTransactions(activeCategory, activeLabel) track by t.id">
-								<div class="transaction-item date">
-									{{ t.date | dateformat }}
-								</div>
-								<div class="transaction-item description">
-									{{t.description}}
-								</div>
-								<div class="transaction-item amount income">
-									{{t.amount>0 ? (t.amount/100 | currency : "£") : ""}}
-								</div>
-								<div class="transaction-item amount expense">
-									{{t.amount<=0 ? (-t.amount/100 | currency : "£") : ""}}
-								</div>
-								<div class="transaction-item category">
-									{{t.category}} - {{t.label}}
-								</div>
-
+						<div class="transaction-row" ng-repeat="t in currentYearTransactions(activeCategory, activeLabel) track by t.id">
+							<div class="transaction-item date">
+								{{ t.date | dateformat }}
 							</div>
+							<div class="transaction-item description">
+								{{t.description}}
+							</div>
+							<div class="transaction-item amount income">
+								{{t.amount>0 ? (t.amount/100 | currency : "£") : ""}}
+							</div>
+							<div class="transaction-item amount expense">
+								{{t.amount<=0 ? (-t.amount/100 | currency : "£") : ""}}
+							</div>
+							<div class="transaction-item category">
+								{{t.category}} - {{t.label}}
+							</div>
+
 						</div>
 					</div>
 				</div>
