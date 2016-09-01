@@ -30,6 +30,7 @@ App.controller("categoriesCtrl", [
 		$scope.activeLabel = $stateParams.label ? $stateParams.label : null;;
 		$scope.activeDetail = null;
 		$scope.activeBudgetIndex = null;
+		$scope.activeMatcherIndex = null;
 
 		$scope.refreshCategories = function() {
 			$scope.categories = []
@@ -117,6 +118,20 @@ App.controller("categoriesCtrl", [
 					$scope.activeBudgetIndex = null
 				} else {
 					$scope.activeBudgetIndex = budgetIndex
+				}
+			}
+		}
+		$scope.chooseMatcher = function(matcherIndex) {
+			if ($scope.activeCategory && 
+				$scope.categoryLabels[$scope.activeCategory] && 
+				$scope.activeLabel && 
+				$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel] &&
+				$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel].matchers[matcherIndex])
+			{
+				if ($scope.activeMatcherIndex == matcherIndex) {
+					$scope.activeMatcherIndex = null
+				} else {
+					$scope.activeMatcherIndex = matcherIndex
 				}
 			}
 		}
@@ -378,7 +393,8 @@ App.controller("categoriesCtrl", [
 				menuitems: [
 					"Edit...",
 					"Delete"
-				]
+				],
+				rightEdge: true
 			}).then(function(which) {
 				if (which == "Edit...") {
 					MODAL.addBudgetForm($scope.categoryDetails[$scope.activeCategory][$scope.activeLabel].budgets[$scope.activeBudgetIndex])
@@ -409,21 +425,65 @@ App.controller("categoriesCtrl", [
 								$scope.activeLabel, 
 								$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel]
 							)
-							LOCAL_DATA.CURRENT_YEAR.setCategoryLabelDetails()
 							$scope.activeBudgetIndex = null;
 						}
 					})
 				}
 			})
 		}
+		$scope.showMatcherPopoverMenu = function(ev) {
+			ev.stopPropagation()
+			MODAL.addPopoverMenu({
+				element: $(ev.target),
+				menuitems: [
+					"Edit...",
+					"Delete"
+				],
+				rightEdge: true
+			}).then(function(which) {
+				if (which == "Edit...") {
+					MODAL.addMatcherForm($scope.categoryDetails[$scope.activeCategory][$scope.activeLabel].matchers[$scope.activeMatcherIndex])
+						.then(function(data) {
+							$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel].matchers[$scope.activeMatcherIndex] = data
+							LOCAL_DATA.CURRENT_YEAR.setCategoryLabelDetails(
+								$scope.activeCategory, 
+								$scope.activeLabel, 
+								$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel]
+							)
+						})
+				} else if (which == "Delete") {
+					MODAL.addAlert({
+						title: "Delete Matcher",
+						message: "Are you sure you want to delete this matcher?",
+						buttons: [{
+							type: "red",
+							label: "Cancel"
+						}, {
+							type: "green",
+							label: "Yes"
+						}]
+					}).then(function(whichDelete) {
+						if (whichDelete == "Yes") {
+							$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel].matchers.splice($scope.activeMatcherIndex, 1)
+							LOCAL_DATA.CURRENT_YEAR.setCategoryLabelDetails(
+								$scope.activeCategory, 
+								$scope.activeLabel, 
+								$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel]
+							)
+							$scope.activeMatcherIndex = null;
+						}
+					})
+				}
+			})
+		}
 
-		var caches = {}
+		var CACHES = {}
 		function cacheFor(when, category, label) {
 			var cacheKey = [when,category,label].join(":")
-			if (!(cacheKey in caches)) {
-				caches[cacheKey] = {}
+			if (!(cacheKey in CACHES)) {
+				CACHES[cacheKey] = {}
 			}
-			return caches[cacheKey]
+			return CACHES[cacheKey]
 		}
 		function amountsFor(when, category, label) {
 			var cache = cacheFor(when, category, label)
@@ -501,7 +561,6 @@ App.controller("categoriesCtrl", [
 			if (cancelNotifier) {
 				cancelNotifier()
 			}
-			caches = {}
 			$scope.year = YEAR.year()
 			LOCAL_DATA = {
 				CURRENT_YEAR: DATA(YEAR.year()),
@@ -509,6 +568,7 @@ App.controller("categoriesCtrl", [
 			}
 
 			cancelNotifier = LOCAL_DATA.CURRENT_YEAR.nowAndWhenChanged($scope, function() {
+				CACHES = {}
 				$q.all({
 					categories: LOCAL_DATA.CURRENT_YEAR.getAllCategoryData(),
 					stats: LOCAL_DATA.CURRENT_YEAR.getStats()

@@ -183,6 +183,7 @@ App.factory("data", [
 			function categorise(description) {
 				if (!DATA) return null
 				if (typeof description !== "string") return null
+				if (description === "") return null
 				var reggy
 				for (category in DATA.categories) {
 					for (label in DATA.categories[category]) {
@@ -208,6 +209,13 @@ App.factory("data", [
 				return null
 			}
 
+			function reAutoCategorise() {
+				DATA.accounts.forEach(function(account) {
+					account.transactions.forEach(function(t) {
+						t.autoCategorisation = categorise(t.bankDescription)
+					})
+				})
+			}
 
 			var service = {
 				nowAndWhenChanged: function(scope, cb) {
@@ -542,7 +550,17 @@ App.factory("data", [
 					if (!DATA.categories[category][label]) {
 						return $q.reject("LABEL_NOT_FOUND")
 					}
+					if (!Array.isArray(details.budgets)) {
+						return $q.reject("BUDGETS_NOT_FOUND")
+					}
+					if (!Array.isArray(details.matchers)) {
+						return $q.reject("MATCHERS_NOT_FOUND")
+					}
+					var needReCategorise = !angular.equals(DATA.categories[category][label].matchers, details.matchers)
 					DATA.categories[category][label] = details
+					if (needReCategorise) {
+						reAutoCategorise()
+					}
 					triggerWatchers()
 				}),
 				getCategoryLabelBudgets: whenLoaded(function(category, label) {

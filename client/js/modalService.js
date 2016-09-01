@@ -48,7 +48,8 @@ App.service("modal", [
 				},
 				left: elOffset.left+(elWidth/2),
 				top: elOffset.top+(elHeight*0.7),
-				menuitems: menuData.menuitems
+				menuitems: menuData.menuitems,
+				rightEdge:menuData.rightEdge
 			}
 			MODALS.push(modal)
 			triggerWatchers()

@@ -377,6 +377,9 @@ budget-graph {
 	margin-top:0.6em;
 	box-shadow:0 0 10px #999;
 }
+.modaldetail .popovermenu.right-edge .menu-container {
+	margin-left:calc(-100% + 0.7em);
+}
 .modaldetail .popovermenu .menu-container .menuitem {
 	height:2em;
 	line-height:2em;

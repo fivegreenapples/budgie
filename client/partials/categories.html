@@ -131,10 +131,10 @@
 						<div class="item match"
 						     ng-if="activeCategory && activeLabel"
 						     ng-repeat-start="match in categoryDetails[activeCategory][activeLabel].matchers"
-						     ng-class="{active:activeMatcher==match}"
+						     ng-class="{active:activeMatcherIndex==$index}"
 						     ng-click="chooseMatcher($index)">
 							{{ matcherMapping[match.type] }} <span class="matchtext">{{ match.match }}</span>
-							<i class="icon popover"></i>
+							<i class="icon popover" ng-click="showMatcherPopoverMenu($event)"></i>
 						</div>
 						<div ng-repeat-end class="spacer"></div>
 					</div>

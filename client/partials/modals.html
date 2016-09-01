@@ -1,7 +1,8 @@
 <div class="modalbackground" ng-repeat-start="layer in modals" ng-class="{blurred:layer.type!='POPOVERMENU'}"></div>
 <div class="modaldetail" ng-repeat-end ng-click="layer.onBackgroundClick()">
 	<div ng-if="layer.type=='POPOVERMENU'" 
-	     class="popovermenu" 
+	     class="popovermenu"
+	     ng-class="{'right-edge':layer.rightEdge}" 
 	     ng-style="{left:layer.left,top:layer.top}" 
 	     ng-click="$event.stopPropagation()">
 		<div class="menu-pointer"></div>

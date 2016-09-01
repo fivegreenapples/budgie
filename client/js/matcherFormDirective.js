@@ -1,8 +1,8 @@
 App.directive("matcherForm", function() {
 	var matcherTypes = [
-		[ "exact","Matches Exactly" ],
 		[ "start", "Starts With" ],
-		[ "regex","Regular Expression" ],
+		[ "exact", "Matches Exactly" ],
+		[ "regex", "Regular Expression" ],
 	].map(function(t) { return { value:t[0], label:t[1]} })
 
 	var vanillaMatcher = {
