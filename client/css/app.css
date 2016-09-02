@@ -309,19 +309,42 @@ budget-graph {
 
 .category-details-container .column .item.active {
 	background-color:#eee;
+}
+.category-details-container .column .item.with-popover.active {
 	padding-right:1.8em;
 }
 .category-details-container .column .item.category {
 	border-left:10px solid #b7b;
+	display:flex;
+	flex-wrap:nowrap;
+	justify-content:space-between;
+	align-items:center;
+}
+.category-details-container .column .item.label .total,
+.category-details-container .column .item.category .total {
+	font-size:0.6em;
+	font-family:'Source Code Pro', Arial;
 }
 .category-details-container .column .item.label {
 	border-left:10px solid #bb7;
+	display:flex;
+	flex-wrap:nowrap;
+	justify-content:space-between;
+	align-items:center;
 }
 .category-details-container .column .item.budget {
 	border-left:10px solid #7bb;
+	display:flex;
+	flex-wrap:nowrap;
+	justify-content:space-between;
+	align-items:center;
 }
 .category-details-container .column .item.match {
 	border-left:10px solid #7bb;
+	display:flex;
+	flex-wrap:nowrap;
+	justify-content:space-between;
+	align-items:center;
 }
 .category-details-container .column .item.match .matchtext {
 	font-family:'Source Code Pro', Arial;

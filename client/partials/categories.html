@@ -11,26 +11,30 @@
 				<div class="item category" 
 				     ng-class="{active:activeCategory===ALL}"
 				     ng-click="$state.go('categories.category', {category:ALL});chooseCategory(ALL)">
-					Everything {{ magicStats[ALL].amount/100 | currency : "£" }}
+					<span>Everything</span>
+					<span class="total">{{ magicStats[ALL].amount/100 | currency : "£" }}</span>
 				</div>
 				<div class="spacer"></div>
 				<div class="item category" 
 				     ng-class="{active:activeCategory===CAT}"
 				     ng-click="$state.go('categories.category', {category:CAT});chooseCategory(CAT)">
-					Categorised {{ magicStats[CAT].amount/100 | currency : "£" }}
+					<span>Categorised</span>
+					<span class="total">{{ magicStats[CAT].amount/100 | currency : "£" }}</span>
 				</div>
 				<div class="spacer"></div>
 				<div class="item category" 
 				     ng-class="{active:activeCategory===UNCAT}"
 				     ng-click="$state.go('categories.category', {category:UNCAT});chooseCategory(UNCAT)">
-					Uncategorised {{ magicStats[UNCAT].amount/100 | currency : "£" }}
+					<span>Uncategorised</span>
+					<span class="total">{{ magicStats[UNCAT].amount/100 | currency : "£" }}</span>
 				</div>
 				<div class="spacer"></div>
-				<div class="item category" 
+				<div class="item category with-popover" 
 				     ng-repeat-start="category in categories"
 				     ng-class="{active:activeCategory==category.name}"
 				     ng-click="$state.go('categories.category', {category:category.name});chooseCategory($index)">
-					{{ category.name }} {{ category.amount/100 | currency : "£" }}
+					<span>{{ category.name }}</span>
+					<span class="total">{{ category.amount/100 | currency : "£" }}</span>
 					<i class="icon popover" ng-click="showCategoryPopoverMenu($event)"></i>
 				</div>
 				<div ng-repeat-end class="spacer"></div>
@@ -49,11 +53,12 @@
 					All Labels 
 				</div>
 				<div class="spacer"></div>
-				<div class="item label"
+				<div class="item label with-popover"
 				     ng-repeat-start="label in categoryLabels[activeCategory]"
 				     ng-class="{active:activeLabel==label.name}"
 				     ng-click="$state.go('categories.category.label', {category:activeCategory,label:label.name});chooseLabel($index)">
-					{{ label.name }} {{ label.amount/100 | currency : "£" }}
+					<span>{{ label.name }}</span>
+					<span class="total">{{ label.amount/100 | currency : "£" }}</span>
 					<i class="icon popover" ng-click="showLabelPopoverMenu($event)"></i>
 				</div>
 				<div ng-repeat-end class="spacer"></div>
@@ -82,7 +87,7 @@
 					            categoryDetails[activeCategory][activeLabel].budgets.length">
 						<div class="spacer"></div>
 						<budget-graph budgets="categoryDetails[activeCategory][activeLabel].budgets" year="year"></budget-graph>
-						<div class="item budget"
+						<div class="item budget with-popover"
 						     ng-if="activeCategory && activeLabel"
 						     ng-repeat-start="budget in categoryDetails[activeCategory][activeLabel].budgets"
 						     ng-class="{active:activeBudgetIndex==$index}"
@@ -128,7 +133,7 @@
 					</div>
 					<div ng-if="activeCategory && activeLabel && categoryDetails[activeCategory][activeLabel].matchers.length" class="spacer"></div>
 					<div>
-						<div class="item match"
+						<div class="item match with-popover"
 						     ng-if="activeCategory && activeLabel"
 						     ng-repeat-start="match in categoryDetails[activeCategory][activeLabel].matchers"
 						     ng-class="{active:activeMatcherIndex==$index}"
