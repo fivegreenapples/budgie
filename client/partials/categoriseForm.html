@@ -12,27 +12,44 @@
 		<span class="validation"></span>
 	</div>
 	<div class="item">
-		<span class="label">Category</span>
+		<span class="label">
+			Category
+			<span ng-if="data.newCategory===null"><br><span class="component button" ng-click="addCategory()">New</span></span>
+			<span ng-if="data.newCategory!==null"><br><span class="component button" ng-click="removeCategory()">Remove</span></span>
+		</span>
 		<span class="input">
-			<span class="select">
+			<span ng-if="data.newCategory===null" class="select">
 				<select ng-options="opt.value as opt.label for opt in categories" ng-model="data.category" ng-change="categoryChanged()">
 					<option value="">Choose a category</option>
 				</select>
+			</span>
+			<span ng-if="data.newCategory!==null" class="textbox">
+				<input type="text" ng-model="data.newCategory">
 			</span>
 		</span>
 		<span class="validation">{{validation.category}}</span>
 	</div>
 	<div class="item">
-		<span class="label">Label</span>
+		<span class="label">
+			Label
+			<span ng-if="data.category && data.newLabel===null"><br><span class="component button" ng-click="addLabel()">New</span></span>
+			<span ng-if="data.newCategory===null && data.category && data.newLabel!==null"><br><span class="component button" ng-click="removeLabel()">Remove</span></span>
+		</span>
 		<span class="input">
-			<span class="select">
+			<span ng-if="data.newCategory===null && !data.category" class="label">
+				Choose a category
+			</span>
+			<span ng-if="data.category && data.newLabel===null" class="select">
 				<select ng-options="opt.value as opt.label for opt in labelsByCategory[data.category]" ng-model="data.label" ng-change="labelChanged()"></select>
+			</span>
+			<span ng-if="data.newLabel!==null" class="textbox">
+				<input type="text" ng-model="data.newLabel">
 			</span>
 		</span>
 		<span class="validation">{{validation.label}}</span>
 	</div>
-	<div class="item">
-		<span class="label">Existing Matchers</span>
+	<div class="item" ng-if="data.newLabel===null">
+		<span class="label">Existing Matchers<br><span ng-if="allowNewMatcher()" class="component button" ng-click="editMatcher()">New</span></span>
 		<span class="input">
 			<span ng-if="!data.category || !data.label" class="label">
 				Choose a category and label
@@ -45,7 +62,6 @@
 						{{ matcherTypes[match.type] }} 
 						<span class="match-text">{{ match.match }}</span>
 					</span>
-					<span ng-if="allowNew()" class="component button" ng-click="editMatcher()">New</span>
 				</span>
 			</span>
 		</span>
@@ -73,7 +89,7 @@
 				<input type="text" ng-model="data.matcher.match">
 			</span>
 		</span>
-		<span class="validation"></span>
+		<span class="validation">{{validation.matcher}}</span>
 	</div>
 </div>
 <div class="button-container">

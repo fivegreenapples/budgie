@@ -42,7 +42,9 @@ App.directive("categoriseForm", function() {
 
 				$scope.data = {
 					category: null,
+					newCategory: null,
 					label: null,
+					newLabel: null,
 					matcher: null
 				}
 				$scope.categories = []
@@ -56,7 +58,6 @@ App.directive("categoriseForm", function() {
 					$scope.categories.sort(optionAlphaSort)
 
 					$scope.labelsByCategory = {}
-					$scope.labelsByCategory[null] = [{value:null, label:"Choose a category"}]
 					angular.forEach(categoryData, function(labelsHash, category) {
 						$scope.labelsByCategory[category] = Object.keys(labelsHash).map(itemToOptionsItem)
 						$scope.labelsByCategory[category].sort(optionAlphaSort)
@@ -76,18 +77,51 @@ App.directive("categoriseForm", function() {
 					$scope.categoryChanged()
 				})
 				
-				$scope.categoryChanged = function() {
-					$scope.data.label = $scope.labelsByCategory[$scope.data.category][0].value
-					$scope.labelChanged()
-				}
-				$scope.labelChanged = function() {
-					$scope.matchersByCategoryAndLabel[$scope.data.category][$scope.data.label] = 
-						angular.copy(originalMatchersByCategoryAndLabel[$scope.data.category][$scope.data.label])
+				function resetMatchers() {
+					if ($scope.data.category && $scope.data.label) {
+						$scope.matchersByCategoryAndLabel[$scope.data.category][$scope.data.label] = 
+							angular.copy(originalMatchersByCategoryAndLabel[$scope.data.category][$scope.data.label])
+					}
 					$scope.data.matcher = null
 				}
-				$scope.allowNew = function() {
-					return $scope.matchersByCategoryAndLabel[$scope.data.category][$scope.data.label].length === 
-						originalMatchersByCategoryAndLabel[$scope.data.category][$scope.data.label].length
+				$scope.categoryChanged = function() {
+					if ($scope.data.category) {
+						$scope.data.label = $scope.labelsByCategory[$scope.data.category][0].value
+					} else {
+						$scope.data.label = null
+					}
+					resetMatchers()
+				}
+				$scope.addCategory = function() {
+					resetMatchers()
+					$scope.data.newCategory = ""
+					$scope.data.newLabel = ""
+					$scope.data.matcher = angular.copy(vanillaMatcher)
+				}
+				$scope.removeCategory = function() {
+					resetMatchers()
+					$scope.data.newCategory = null
+					$scope.data.newLabel = null
+					$scope.data.matcher = null
+				}
+				$scope.labelChanged = function() {
+					resetMatchers()
+				}
+				$scope.addLabel = function() {
+					resetMatchers()
+					$scope.data.newLabel = ""
+					$scope.data.matcher = angular.copy(vanillaMatcher)
+				}
+				$scope.removeLabel = function() {
+					resetMatchers()
+					$scope.data.newLabel = null
+					$scope.data.matcher = null
+				}
+				$scope.allowNewMatcher = function() {
+					return $scope.data.category && 
+					       $scope.data.label && 
+					       $scope.matchersByCategoryAndLabel[$scope.data.category][$scope.data.label].length === 
+					       		originalMatchersByCategoryAndLabel[$scope.data.category][$scope.data.label].length
 				}
 				$scope.editMatcher = function(i) {
 					if (i === undefined) {
@@ -113,29 +147,63 @@ App.directive("categoriseForm", function() {
 					$scope.editMatcher(i)
 				}
 
+				function validateMatcher(m) {
+					if (m.match == "") {
+						return "A match value is required."
+					}
+
+					if (m.type === "regex") {
+						var match = m.match.replace(/^\/|\/$/g, "")
+						if (match == "") {
+							return "Please provide a valid regular expression."
+						}
+						try {
+							var r = new RegExp(match)
+							m.match = "/"+match+"/" // makes sure any regex type has slash delimters
+						} catch (e) {
+							return "Please enter a valid regular expression."
+						}
+					}
+				}
 				function validate() {
-					$scope.validation = {matchers:[]}
+					$scope.validation = {category:null, label:null, matchers:[]}
 
-					$scope.matchersByCategoryAndLabel[$scope.data.category][$scope.data.label].forEach(function (m) {
-						if (m.match == "") {
-							$scope.validation.matchers.push("A match value is required.")
-						}
+					if (!$scope.data.category && $scope.data.newCategory === null) {
+						$scope.validation.category = "Choose a category"
+					} else {
 
-						if (m.type === "regex") {
-							var match = m.match.replace(/^\/|\/$/g, "")
-							if (match == "") {
-								$scope.validation.matchers.push("Please provide a valid regular expression.")
-							}
-							try {
-								var r = new RegExp(match)
-								m.match = "/"+match+"/" // makes sure any regex type has slash delimters
-							} catch (e) {
-								$scope.validation.matchers.push("Please enter a valid regular expression.")
+						if ($scope.data.newCategory !== null) {
+							if ($scope.data.newCategory == "" ) {
+								$scope.validation.category = "A category is required"
+							} else if (originalMatchersByCategoryAndLabel[$scope.data.newCategory]) {
+								$scope.validation.category = "This category exists already."
 							}
 						}
-					})
 
-					return $scope.validation.matchers.length === 0
+						if ($scope.data.newLabel !== null) {
+							if ($scope.data.newLabel == "" ) {
+								$scope.validation.label = "A label is required"
+							} else if ($scope.data.newCategory === null && originalMatchersByCategoryAndLabel[$scope.data.category][$scope.data.newLabel]) {
+								$scope.validation.label = "This label exists already."
+							}
+						}
+
+						if ($scope.data.newCategory === null && $scope.data.newLabel === null) {
+							$scope.matchersByCategoryAndLabel[$scope.data.category][$scope.data.label].forEach(function (m) {
+								var validation = validateMatcher(m)
+								if (validation) {
+									$scope.validation.matchers.push(validation)
+								}
+							})
+						} else {
+							var validation = validateMatcher($scope.data.matcher)
+							if (validation) {
+								$scope.validation.matcher = validation
+							}
+						}
+					}
+
+					return !$scope.validation.category && !$scope.validation.label && $scope.validation.matchers.length === 0 && !$scope.validation.matcher
 				}
 
 				var alwaysValidate = false
@@ -150,13 +218,12 @@ App.directive("categoriseForm", function() {
 
 				$scope.commit = function() {
 					alwaysValidate = true
-					if (!$scope.data.category || !$scope.data.label) {
-						alert("Choose a category etc")
-						return
-					}
+
 					if (!validate()) {
 						return
 					}
+
+					// work out how to add new cat and label
 
 					if (angular.equals(
 							$scope.matchersByCategoryAndLabel[$scope.data.category][$scope.data.label],
