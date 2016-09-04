@@ -113,8 +113,11 @@
 							<div class="transaction-item amount expense">
 								{{t.amount<=0 ? (-t.amount/100 | currency : "£") : ""}}
 							</div>
-							<div class="transaction-item category">
+							<div ng-if="t.category" class="transaction-item category">
 								{{t.category}} - {{t.label}}
+							</div>
+							<div ng-if="!t.category" class="transaction-item categorise">
+								<span ng-click="launchCategoriseModal(t)">Categorise</span>
 							</div>
 
 						</div>
@@ -138,7 +141,7 @@
 						     ng-repeat-start="match in categoryDetails[activeCategory][activeLabel].matchers"
 						     ng-class="{active:activeMatcherIndex==$index}"
 						     ng-click="chooseMatcher($index)">
-							{{ matcherMapping[match.type] }} <span class="matchtext">{{ match.match }}</span>
+							<span class="component matcher">{{ matcherMapping[match.type] }} <span class="match-text">{{ match.match }}</span></span>
 							<i class="icon popover" ng-click="showMatcherPopoverMenu($event)"></i>
 						</div>
 						<div ng-repeat-end class="spacer"></div>

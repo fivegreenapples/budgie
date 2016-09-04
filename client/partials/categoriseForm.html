@@ -1,0 +1,82 @@
+<h1>Auto Categorise and Match</h1>
+<div class="item-container">
+	<div class="item">
+		<span class="label">Transaction</span>
+		<span class="input">
+			<span class="label">
+				{{ transaction.date | dateformat }},
+				{{ transaction.description }},
+				{{ transaction.amount/100 | currency : "£" }}
+			</span>
+		</span>
+		<span class="validation"></span>
+	</div>
+	<div class="item">
+		<span class="label">Category</span>
+		<span class="input">
+			<span class="select">
+				<select ng-options="opt.value as opt.label for opt in categories" ng-model="data.category" ng-change="categoryChanged()">
+					<option value="">Choose a category</option>
+				</select>
+			</span>
+		</span>
+		<span class="validation">{{validation.category}}</span>
+	</div>
+	<div class="item">
+		<span class="label">Label</span>
+		<span class="input">
+			<span class="select">
+				<select ng-options="opt.value as opt.label for opt in labelsByCategory[data.category]" ng-model="data.label" ng-change="labelChanged()"></select>
+			</span>
+		</span>
+		<span class="validation">{{validation.label}}</span>
+	</div>
+	<div class="item">
+		<span class="label">Existing Matchers</span>
+		<span class="input">
+			<span ng-if="!data.category || !data.label" class="label">
+				Choose a category and label
+			</span>
+			<span ng-if="data.category && data.label" class="label">
+				<span class="component matcher-list">
+					<span ng-repeat="match in matchersByCategoryAndLabel[data.category][data.label]" class="component matcher">
+						<span ng-if="hasMatcherChanged($index)" class="component button" ng-click="resetMatcher($index)">Reset</span>
+						<span class="component button" ng-click="editMatcher($index)">Edit</span>
+						{{ matcherTypes[match.type] }} 
+						<span class="match-text">{{ match.match }}</span>
+					</span>
+					<span ng-if="allowNew()" class="component button" ng-click="editMatcher()">New</span>
+				</span>
+			</span>
+		</span>
+		<span class="validation">
+			<span ng-repeat="v in validation.matchers track by $index">{{v}} </span>
+		</span>
+	</div>
+	<div class="item" ng-if="data.matcher">
+		<span class="label">Matcher Type</span>
+		<span class="input">
+			<span class="select">
+				<select ng-options="opt.value as opt.label for opt in matcherTypeOptions" ng-model="data.matcher.type" ng-change="validateType()"></select>
+			</span>
+		</span>
+		<span class="validation"></span>
+	</div>
+	<div class="item" ng-if="data.matcher">
+		<span class="label" ng-switch="data.matcher.type">
+			<span ng-switch-when="exact">Matches</span>
+			<span ng-switch-when="start">Starts with</span>
+			<span ng-switch-when="regex">Regex</span>
+		</span>
+		<span class="input">
+			<span class="textbox">
+				<input type="text" ng-model="data.matcher.match">
+			</span>
+		</span>
+		<span class="validation"></span>
+	</div>
+</div>
+<div class="button-container">
+	<span class="component button red" ng-click="cancel()">Cancel</span>
+	<span class="component button green" ng-click="commit()">Save</span>
+</div>

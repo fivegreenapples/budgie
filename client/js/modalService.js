@@ -122,11 +122,12 @@ App.service("modal", [
 			return deferred.promise
 		},
 
-		addBudgetForm: function(budget) {
+		addBudgetForm: function(year, budget) {
 			var deferred = $q.defer()
 			var modal = {
 				type: "BUDGETFORM",
 				data: budget,
+				year: year,
 				onSave: function(newBudget) {
 					deferred.resolve(newBudget)
 					service.pop()
@@ -147,6 +148,25 @@ App.service("modal", [
 				data: matcher,
 				onSave: function(newMatcher) {
 					deferred.resolve(newMatcher)
+					service.pop()
+				},
+				onCancel: function() {
+					deferred.reject()
+					service.pop()
+				}
+			}
+			MODALS.push(modal)
+			triggerWatchers()
+			return deferred.promise
+		},
+		addCategoriseForm: function(year, transaction) {
+			var deferred = $q.defer()
+			var modal = {
+				type: "CATEGORISEFORM",
+				data: transaction,
+				year: year,
+				onSave: function() {
+					deferred.resolve()
 					service.pop()
 				},
 				onCancel: function() {

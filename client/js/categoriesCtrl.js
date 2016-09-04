@@ -229,7 +229,7 @@ App.controller("categoriesCtrl", [
 				!($scope.activeLabel in $scope.categoryDetails[$scope.activeCategory])) {
 				return
 			}
-			MODAL.addBudgetForm().then(function(data) {
+			MODAL.addBudgetForm($scope.year).then(function(data) {
 				$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel].budgets.push(data)
 				LOCAL_DATA.CURRENT_YEAR.setCategoryLabelDetails(
 					$scope.activeCategory, 
@@ -397,7 +397,7 @@ App.controller("categoriesCtrl", [
 				rightEdge: true
 			}).then(function(which) {
 				if (which == "Edit...") {
-					MODAL.addBudgetForm($scope.categoryDetails[$scope.activeCategory][$scope.activeLabel].budgets[$scope.activeBudgetIndex])
+					MODAL.addBudgetForm($scope.year, $scope.categoryDetails[$scope.activeCategory][$scope.activeLabel].budgets[$scope.activeBudgetIndex])
 						.then(function(data) {
 							$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel].budgets[$scope.activeBudgetIndex] = data
 							LOCAL_DATA.CURRENT_YEAR.setCategoryLabelDetails(
@@ -551,6 +551,12 @@ App.controller("categoriesCtrl", [
 		$scope.currentYearTransactions = function(category, label) {
 			return transactionsFor("CURRENT_YEAR", category, label)
 		}
+
+		$scope.launchCategoriseModal = function(t) {
+			MODAL.addCategoriseForm($scope.year, t)
+				.then(function(data) {})
+		}
+
 
 		var LOCAL_DATA = null
 		var cancelNotifier = null

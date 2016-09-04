@@ -18,13 +18,13 @@
 		</span>
 		<span class="input">
 			<span class="textbox">
-				<input ng-model="m.match">
+				<input type="text" ng-model="m.match">
 			</span>
 		</span>
 		<span class="validation">{{matchValidation}}</span>
 	</div>
 </div>
 <div class="button-container">
-	<span class="button red" ng-click="cancel()">Cancel</span>
-	<span class="button green" ng-click="validate() && save(m)">{{ mode=="EDIT" ? "Save" : "Add" }}</span>
+	<span class="component button red" ng-click="cancel()">Cancel</span>
+	<span class="component button green" ng-click="validate() && save(m)">{{ mode=="EDIT" ? "Save" : "Add" }}</span>
 </div>

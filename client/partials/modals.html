@@ -28,7 +28,7 @@
 		<p>{{ layer.message }}</p>
 		<div class="button-container">
 			<span ng-repeat="but in layer.buttons.slice().reverse()" 
-			      class="button {{but.type}}"
+			      class="component button {{but.type}}"
 			      ng-click="layer.onButtonClick(but.label)">
 				{{ but.label }}
 			</span>
@@ -73,7 +73,7 @@
 			</div>
 			<div class="button-container">
 				<span ng-repeat="but in layer.buttons.slice().reverse()" 
-				      class="button {{but.type}}"
+				      class="component button {{but.type}}"
 				      ng-click="layer.onButtonClick(but.label)">
 					{{ but.label }}
 				</span>
@@ -89,6 +89,11 @@
 	<div class="matcher-form-container form-container" ng-if="layer.type=='MATCHERFORM'">
 		<div class="form-header"></div>
 		<div class="form" matcher-form matcher="layer.data" save="layer.onSave" cancel="layer.onCancel"></div>
+		<div class="form-footer"></div>
+	</div>
+	<div class="categorise-form-container form-container" ng-if="layer.type=='CATEGORISEFORM'">
+		<div class="form-header"></div>
+		<div class="form" categorise-form transaction="layer.data" year="layer.year" save="layer.onSave" cancel="layer.onCancel"></div>
 		<div class="form-footer"></div>
 	</div>
 </div>

@@ -23,8 +23,6 @@ App.directive("matcherForm", function() {
 
 				// setup mode
 				$scope.mode = $scope.matcher ? "EDIT" : "NEW"
-				// validate year
-				$scope.year = ($scope.year > 2000) ? $scope.year : moment().year()
 
 				$scope.matcherTypes = matcherTypes
 
