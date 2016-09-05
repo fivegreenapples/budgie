@@ -6,7 +6,7 @@ App.directive("matcherForm", function() {
 	].map(function(t) { return { value:t[0], label:t[1]} })
 
 	var vanillaMatcher = {
-		type: "exact",
+		type: "start",
 		match: ""
 	}
 

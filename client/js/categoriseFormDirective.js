@@ -2,9 +2,11 @@ App.directive("categoriseForm", function() {
 	var matcherTypes = [
 	].map(function(t) { return { value:t[0], label:t[1]} })
 
-	var vanillaMatcher = {
-		type: "exact",
-		match: ""
+	var vanillaMatcher = function(transactionDescription) {
+		return {
+			type: "start",
+			match: transactionDescription
+		}
 	}
 
 	function itemToOptionsItem(item) {
@@ -27,8 +29,9 @@ App.directive("categoriseForm", function() {
 		},
 		controller: [ 
 			"$scope",
+			"$q",
 			"data",
-			function($scope, DATA) {
+			function($scope, $q, DATA) {
 
 				$scope.matcherTypes = {
 					start: "Starts With",
@@ -96,7 +99,7 @@ App.directive("categoriseForm", function() {
 					resetMatchers()
 					$scope.data.newCategory = ""
 					$scope.data.newLabel = ""
-					$scope.data.matcher = angular.copy(vanillaMatcher)
+					$scope.data.matcher = angular.copy(vanillaMatcher($scope.transaction.description))
 				}
 				$scope.removeCategory = function() {
 					resetMatchers()
@@ -110,7 +113,7 @@ App.directive("categoriseForm", function() {
 				$scope.addLabel = function() {
 					resetMatchers()
 					$scope.data.newLabel = ""
-					$scope.data.matcher = angular.copy(vanillaMatcher)
+					$scope.data.matcher = angular.copy(vanillaMatcher($scope.transaction.description))
 				}
 				$scope.removeLabel = function() {
 					resetMatchers()
@@ -125,7 +128,7 @@ App.directive("categoriseForm", function() {
 				}
 				$scope.editMatcher = function(i) {
 					if (i === undefined) {
-						$scope.matchersByCategoryAndLabel[$scope.data.category][$scope.data.label].push(angular.copy(vanillaMatcher))
+						$scope.matchersByCategoryAndLabel[$scope.data.category][$scope.data.label].push(angular.copy(vanillaMatcher($scope.transaction.description)))
 						i = $scope.matchersByCategoryAndLabel[$scope.data.category][$scope.data.label].length - 1
 					}
 					$scope.data.matcher = $scope.matchersByCategoryAndLabel[$scope.data.category][$scope.data.label][i]
@@ -223,26 +226,42 @@ App.directive("categoriseForm", function() {
 						return
 					}
 
-					// work out how to add new cat and label
+					var promise = $q.when()
+					var category = $scope.data.newCategory !== null ? $scope.data.newCategory : $scope.data.category
+					var label    = $scope.data.newLabel    !== null ? $scope.data.newLabel    : $scope.data.label
 
-					if (angular.equals(
-							$scope.matchersByCategoryAndLabel[$scope.data.category][$scope.data.label],
-							originalMatchersByCategoryAndLabel[$scope.data.category][$scope.data.label]
-						)) {
-						$scope.save()
-						return
+					if ($scope.data.newCategory !== null) {
+						promise.then(function() {
+							return DATA($scope.year).addCategory($scope.data.newCategory)
+						})
+					}
+					if ($scope.data.newLabel !== null) {
+						promise.then(function() {
+							return DATA($scope.year).addCategoryLabel(category, $scope.data.newLabel)
+						})
+
+						// with new label we always have a new matcher
+						promise.then(function() {
+							return DATA($scope.year).setCategoryLabelMatchers(category, label, [$scope.data.matcher])
+						})
 					}
 
-					var category = $scope.data.category, label = $scope.data.label
-					DATA($scope.year).getAllCategoryData()
-						.then(function(categoryData) {
-							categoryData[category][label].matchers = angular.copy($scope.matchersByCategoryAndLabel[category][label])
-							return DATA($scope.year).setCategoryLabelDetails(category, label, categoryData[category][label])
-						})
-						.then(function() {
-							$scope.save()
-						})
+					// with no new label we check the state of the matchers
+					if ($scope.data.newLabel === null) {
 
+						if (!angular.equals(
+								$scope.matchersByCategoryAndLabel[$scope.data.category][$scope.data.label],
+								originalMatchersByCategoryAndLabel[$scope.data.category][$scope.data.label]
+							))
+						{
+							// not equal so we must commit
+							promise.then(function() {
+								return DATA($scope.year).setCategoryLabelMatchers(category, label, $scope.matchersByCategoryAndLabel[category][label])
+							})
+						}
+					}
+
+					promise.then($scope.save)
 				}
 
 			}

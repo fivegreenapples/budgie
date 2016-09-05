@@ -491,6 +491,18 @@ App.factory("data", [
 					}
 					DATA.categories[newVal] = DATA.categories[oldVal]
 					delete DATA.categories[oldVal]
+					DATA.accounts.forEach(function(account) {
+						account.transactions.forEach(function(t) {
+							if (t.autoCategorisation && t.autoCategorisation[0] == oldVal) {
+								t.autoCategorisation[0] = newVal
+							}
+							t.entries.forEach(function(e) {
+								if (e.categorisation && e.categorisation[0] == oldVal) {
+									e.categorisation[0] = newVal
+								}
+							})
+						})
+					})
 					triggerWatchers()
 				}),
 				addCategory: whenLoaded(function(newVal) {
@@ -506,6 +518,18 @@ App.factory("data", [
 						return $q.reject("CATEGORY_NOT_FOUND")
 					}
 					delete DATA.categories[oldVal]
+					DATA.accounts.forEach(function(account) {
+						account.transactions.forEach(function(t) {
+							if (t.autoCategorisation && t.autoCategorisation[0] == oldVal) {
+								t.autoCategorisation = null
+							}
+							t.entries.forEach(function(e) {
+								if (e.categorisation && e.categorisation[0] == oldVal) {
+									e.categorisation = null
+								}
+							})
+						})
+					})
 					triggerWatchers()
 				}),
 
@@ -521,6 +545,18 @@ App.factory("data", [
 					}
 					DATA.categories[category][newVal] = DATA.categories[category][oldVal]
 					delete DATA.categories[category][oldVal]
+					DATA.accounts.forEach(function(account) {
+						account.transactions.forEach(function(t) {
+							if (t.autoCategorisation && t.autoCategorisation[1] == oldVal) {
+								t.autoCategorisation[1] = newVal
+							}
+							t.entries.forEach(function(e) {
+								if (e.categorisation && e.categorisation[1] == oldVal) {
+									e.categorisation[1] = newVal
+								}
+							})
+						})
+					})
 					triggerWatchers()
 				}),
 				addCategoryLabel: whenLoaded(function(category, newVal) {
@@ -541,6 +577,18 @@ App.factory("data", [
 						return $q.reject("LABEL_NOT_FOUND")
 					}
 					delete DATA.categories[category][oldVal]
+					DATA.accounts.forEach(function(account) {
+						account.transactions.forEach(function(t) {
+							if (t.autoCategorisation && t.autoCategorisation[1] == oldVal) {
+								t.autoCategorisation = null
+							}
+							t.entries.forEach(function(e) {
+								if (e.categorisation && e.categorisation[1] == oldVal) {
+									e.categorisation = null
+								}
+							})
+						})
+					})
 					triggerWatchers()
 				}),
 				setCategoryLabelDetails: whenLoaded(function(category, label, details) {
@@ -557,10 +605,42 @@ App.factory("data", [
 						return $q.reject("MATCHERS_NOT_FOUND")
 					}
 					var needReCategorise = !angular.equals(DATA.categories[category][label].matchers, details.matchers)
-					DATA.categories[category][label] = details
+					DATA.categories[category][label] = angular.copy(details)
 					if (needReCategorise) {
 						reAutoCategorise()
 					}
+					triggerWatchers()
+				}),
+				setCategoryLabelMatchers: whenLoaded(function(category, label, matchers) {
+					if (!DATA.categories[category]) {
+						return $q.reject("CATEGORY_NOT_FOUND")
+					}
+					if (!DATA.categories[category][label]) {
+						return $q.reject("LABEL_NOT_FOUND")
+					}
+					if (!Array.isArray(matchers)) {
+						return $q.reject("MATCHERS_NOT_ARRAY")
+					}
+					// todo: add matcher validation
+					var needReCategorise = !angular.equals(DATA.categories[category][label].matchers, matchers)
+					DATA.categories[category][label].matchers = angular.copy(matchers)
+					if (needReCategorise) {
+						reAutoCategorise()
+					}
+					triggerWatchers()
+				}),
+				setCategoryLabelBudgets: whenLoaded(function(category, label, budgets) {
+					if (!DATA.categories[category]) {
+						return $q.reject("CATEGORY_NOT_FOUND")
+					}
+					if (!DATA.categories[category][label]) {
+						return $q.reject("LABEL_NOT_FOUND")
+					}
+					if (!Array.isArray(details.budgets)) {
+						return $q.reject("BUDGETS_NOT_ARRAY")
+					}
+					// todo: add budget validation
+					DATA.categories[category][label].budgets = angular.copy(budgets)
 					triggerWatchers()
 				}),
 				getCategoryLabelBudgets: whenLoaded(function(category, label) {
