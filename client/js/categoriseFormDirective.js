@@ -75,9 +75,6 @@ App.directive("categoriseForm", function() {
 					})
 					originalMatchersByCategoryAndLabel = angular.copy($scope.matchersByCategoryAndLabel)
 
-				}).then(function() {
-					$scope.data.category = "Cash Withdrawal"
-					$scope.categoryChanged()
 				})
 				
 				function resetMatchers() {

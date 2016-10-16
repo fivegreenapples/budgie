@@ -28,39 +28,41 @@ App.controller("categoriesCtrl", [
 
 		$scope.activeCategory = $stateParams.category ? $stateParams.category : $scope.ALL;
 		$scope.activeLabel = $stateParams.label ? $stateParams.label : null;;
-		$scope.activeDetail = null;
-		$scope.activeBudgetIndex = null;
+		$scope.activeDetail = "transactions";
+		$scope.activeBudgetId = null;
 		$scope.activeMatcherIndex = null;
 
 		$scope.refreshCategories = function() {
 			$scope.categories = []
 			$scope.categoryLabels = {}
 			$scope.categoryDetails = {}
-			$scope.magicStats = {}
-			$scope.magicStats[$scope.ALL] = STATS[$scope.ALL]
-			$scope.magicStats[$scope.CAT] = STATS[$scope.CAT]
-			$scope.magicStats[$scope.UNCAT] = STATS[$scope.UNCAT]
+			$scope.aggregateData = {}
+			$scope.aggregateData[$scope.ALL] = {
+				amount: LOCAL_DATA.CURRENT_YEAR.totalForAll()
+			}
+			$scope.aggregateData[$scope.CAT] = {
+				amount: LOCAL_DATA.CURRENT_YEAR.totalForCategorised()
+			}
+			$scope.aggregateData[$scope.UNCAT] = {
+				amount: LOCAL_DATA.CURRENT_YEAR.totalForUncategorised()
+			}
 
-			angular.forEach(CATEGORIES, function(val, key) {
+			LOCAL_DATA.CURRENT_YEAR.activeCategories().forEach(function(cat) {
 				$scope.categories.push({
-					name: key,
-					amount: STATS.categories[key].amount
+					name: cat,
+					amount: LOCAL_DATA.CURRENT_YEAR.totalForCategory(cat)
 				})
 			})
-			$scope.categories.sort(function(A, B) { return A.name.toLowerCase().localeCompare(B.name.toLowerCase()) })
 
 			$scope.categories.forEach(function(category) {
 				$scope.categoryLabels[category.name] = []
-				angular.forEach(CATEGORIES[category.name], function(val, key) {
+				LOCAL_DATA.CURRENT_YEAR.activeLabelsForCategory(category.name).forEach(function(label) {
 					$scope.categoryLabels[category.name].push({
-						name: key,
-						amount: STATS.categories[category.name].labels[key].amount
+						name: label,
+						amount: LOCAL_DATA.CURRENT_YEAR.totalForLabel(category.name, label)
 					})
 				})
-				$scope.categoryLabels[category.name].sort(function(A, B) { return A.name.toLowerCase().localeCompare(B.name.toLowerCase()) })
 			})
-
-			$scope.categoryDetails = angular.copy(CATEGORIES)
 
 			if (!$scope.activeCategory || (!magic_constants[$scope.activeCategory] && !$scope.categoryLabels[$scope.activeCategory])) {
 				$scope.activeCategory = $scope.ALL
@@ -68,7 +70,7 @@ App.controller("categoriesCtrl", [
 			if (magic_constants[$scope.activeCategory]) {
 				$scope.activeLabel = null;
 			} else {
-				if (!$scope.activeLabel || !$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel]) {
+				if (!$scope.activeLabel || ($scope.categoryLabels[$scope.activeCategory].findIndex(function(l) { return l.name === $scope.activeLabel }) === -1)) {
 					$scope.activeLabel = $scope.ALLLAB;
 				}
 			}
@@ -79,7 +81,7 @@ App.controller("categoriesCtrl", [
 			if (magic_constants[categoryIndex]) {
 				$scope.activeCategory = magic_constants[categoryIndex]
 				$scope.activeLabel = null
-				$scope.activeDetail = null
+				$scope.activeDetail = "transactions"
 				return
 			}
 			if ($scope.categories[categoryIndex]) {
@@ -107,18 +109,11 @@ App.controller("categoriesCtrl", [
 				}
 			}
 		}
-		$scope.chooseBudget = function(budgetIndex) {
-			if ($scope.activeCategory && 
-				$scope.categoryLabels[$scope.activeCategory] && 
-				$scope.activeLabel && 
-				$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel] &&
-				$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel].budgets[budgetIndex])
-			{
-				if ($scope.activeBudgetIndex == budgetIndex) {
-					$scope.activeBudgetIndex = null
-				} else {
-					$scope.activeBudgetIndex = budgetIndex
-				}
+		$scope.chooseBudget = function(budgetId) {
+			if ($scope.activeBudgetId == budgetId) {
+				$scope.activeBudgetId = null
+			} else {
+				$scope.activeBudgetId = budgetId
 			}
 		}
 		$scope.chooseMatcher = function(matcherIndex) {
@@ -223,19 +218,11 @@ App.controller("categoriesCtrl", [
 			})
 		}
 		$scope.addBudget = function() {
-			if (!$scope.activeCategory || 
-				!($scope.activeCategory in $scope.categoryLabels) ||
-				!$scope.activeLabel ||
-				!($scope.activeLabel in $scope.categoryDetails[$scope.activeCategory])) {
-				return
-			}
 			MODAL.addBudgetForm($scope.year).then(function(data) {
-				$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel].budgets.push(data)
-				LOCAL_DATA.CURRENT_YEAR.setCategoryLabelDetails(
-					$scope.activeCategory, 
-					$scope.activeLabel, 
-					$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel]
-				)
+				data.category = $scope.activeCategory in magic_constants ? null : $scope.activeCategory 
+				data.label = $scope.activeLabel in magic_constants ? null : $scope.activeLabel
+				$scope.activeBudgetId = data.id
+				LOCAL_DATA.CURRENT_YEAR.setBudget(data)
 			})
 		}
 		$scope.addMatcher = function() {
@@ -397,14 +384,9 @@ App.controller("categoriesCtrl", [
 				rightEdge: true
 			}).then(function(which) {
 				if (which == "Edit...") {
-					MODAL.addBudgetForm($scope.year, $scope.categoryDetails[$scope.activeCategory][$scope.activeLabel].budgets[$scope.activeBudgetIndex])
+					MODAL.addBudgetForm($scope.year, LOCAL_DATA.CURRENT_YEAR.budgetById($scope.activeBudgetId))
 						.then(function(data) {
-							$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel].budgets[$scope.activeBudgetIndex] = data
-							LOCAL_DATA.CURRENT_YEAR.setCategoryLabelDetails(
-								$scope.activeCategory, 
-								$scope.activeLabel, 
-								$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel]
-							)
+							LOCAL_DATA.CURRENT_YEAR.setBudget(data)
 						})
 				} else if (which == "Delete") {
 					MODAL.addAlert({
@@ -419,13 +401,7 @@ App.controller("categoriesCtrl", [
 						}]
 					}).then(function(whichDelete) {
 						if (whichDelete == "Yes") {
-							$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel].budgets.splice($scope.activeBudgetIndex, 1)
-							LOCAL_DATA.CURRENT_YEAR.setCategoryLabelDetails(
-								$scope.activeCategory, 
-								$scope.activeLabel, 
-								$scope.categoryDetails[$scope.activeCategory][$scope.activeLabel]
-							)
-							$scope.activeBudgetIndex = null;
+							LOCAL_DATA.CURRENT_YEAR.deleteBudgetById($scope.activeBudgetId)
 						}
 					})
 				}
@@ -477,67 +453,44 @@ App.controller("categoriesCtrl", [
 			})
 		}
 
-		var CACHES = {}
-		function cacheFor(when, category, label) {
-			var cacheKey = [when,category,label].join(":")
-			if (!(cacheKey in CACHES)) {
-				CACHES[cacheKey] = {}
-			}
-			return CACHES[cacheKey]
-		}
 		function amountsFor(when, category, label) {
-			var cache = cacheFor(when, category, label)
-			if (cache.amounts) {
-				return cache.amounts
-			}
-
-			cache.amounts = []
-
-			var promise
-			if (category === $scope.UNCAT) {
-				promise = LOCAL_DATA[when].getAmountsByDayForUncategorised()
-			} else if (category === $scope.ALL) {
-				promise = LOCAL_DATA[when].getAmountsByDayForAll()
+			if (category === $scope.ALL) {
+				return LOCAL_DATA[when].dailyAmountsForAll()
 			} else if (category === $scope.CAT) {
-				promise = LOCAL_DATA[when].getAmountsByDayForCategorised()
-			} else {
-				promise = LOCAL_DATA[when].getAmountsByDayForCategoryLabel(category, (label === $scope.ALLLAB ? null : label))
+				return LOCAL_DATA[when].dailyAmountsForCategorised()
+			} else if (category === $scope.UNCAT) {
+				return LOCAL_DATA[when].dailyAmountsForUncategorised()
 			}
-
-			promise.then(function(amounts) {
-				cache.amounts = amounts
-			})
+			if (label === $scope.ALLLAB) label = null
+			return LOCAL_DATA[when].dailyAmountsForCategoryAndLabel(category, label)
 		}
 		function transactionsFor(when, category, label) {
-			var cache = cacheFor(when, category, label)
-			if (cache.transactions) {
-				return cache.transactions
-			}
-
-			cache.transactions = []
-
-			var promise
-			if (category === $scope.UNCAT) {
-				promise = LOCAL_DATA[when].getUncategorisedTransactions()
-			} else if (category === $scope.ALL) {
-				promise = LOCAL_DATA[when].getAllTransactions()
+			if (category === $scope.ALL) {
+				return LOCAL_DATA[when].transactionsForAll()
 			} else if (category === $scope.CAT) {
-				promise = LOCAL_DATA[when].getCategorisedTransactions()
-			} else {
-				promise = LOCAL_DATA[when].getTransactionsForCategoryLabel(category, (label === $scope.ALLLAB ? null : label))
+				return LOCAL_DATA[when].transactionsForCategorised()
+			} else if (category === $scope.UNCAT) {
+				return LOCAL_DATA[when].transactionsForUncategorised()
 			}
-
-			promise.then(function(transactions) {
-				transactions.sort(function(a,b) {
-					var val = 0
-					val = a.date - b.date
-					if (val === 0) {
-						val = a.description.localeCompare(b.description)
-					}
-					return val;
-				})
-				cache.transactions = transactions
-			})
+			if (label === $scope.ALLLAB) label = null
+			return LOCAL_DATA[when].transactionsForCategoryAndLabel(category, label)
+		}
+		function budgetsFor(when, category, label) {
+			if (category === $scope.ALL) {
+				return LOCAL_DATA[when].budgetsForAll()
+			} else if (category === $scope.CAT) {
+				return LOCAL_DATA[when].budgetsForCategorised()
+			} else if (category === $scope.UNCAT) {
+				return LOCAL_DATA[when].budgetsForUncategorised()
+			}
+			if (label === $scope.ALLLAB) label = null
+			return LOCAL_DATA[when].budgetsForCategoryAndLabel(category, label)
+		}
+		function initialValueFor(when, category, label) {
+			if (category === $scope.ALL) {
+				return LOCAL_DATA[when].initialValueForYear()
+			}
+			return 0
 		}
 		$scope.previousYearAmounts = function(category, label) {
 			return amountsFor("PREVIOUS_YEAR", category, label)
@@ -551,6 +504,12 @@ App.controller("categoriesCtrl", [
 		$scope.currentYearTransactions = function(category, label) {
 			return transactionsFor("CURRENT_YEAR", category, label)
 		}
+		$scope.currentYearBudgets = function(category, label) {
+			return budgetsFor("CURRENT_YEAR", category, label)
+		}
+		$scope.currentYearInitialValue = function(category, label) {
+			return initialValueFor("CURRENT_YEAR", category, label)
+		}
 
 		$scope.launchCategoriseModal = function(t) {
 			MODAL.addCategoriseForm($scope.year, t)
@@ -559,13 +518,16 @@ App.controller("categoriesCtrl", [
 
 
 		var LOCAL_DATA = null
-		var cancelNotifier = null
-		var CATEGORIES
-		var STATS
+		var cancelNotifier = null, cancelNotifierPrev = null
 
+		$scope.loading = true;
 		YEAR.nowAndWhenChanged($scope, function() {
+			$scope.loading = true;
 			if (cancelNotifier) {
 				cancelNotifier()
+			}
+			if (cancelNotifierPrev) {
+				cancelNotifierPrev()
 			}
 			$scope.year = YEAR.year()
 			LOCAL_DATA = {
@@ -573,17 +535,23 @@ App.controller("categoriesCtrl", [
 				PREVIOUS_YEAR: DATA(YEAR.year()-1)
 			}
 
-			cancelNotifier = LOCAL_DATA.CURRENT_YEAR.nowAndWhenChanged($scope, function() {
-				CACHES = {}
-				$q.all({
-					categories: LOCAL_DATA.CURRENT_YEAR.getAllCategoryData(),
-					stats: LOCAL_DATA.CURRENT_YEAR.getStats()
-				}).then(function(res) {
-					CATEGORIES = res.categories
-					STATS = res.stats
+			var seenYears = 0
+
+			cancelNotifier = LOCAL_DATA.CURRENT_YEAR.whenCachedAndWhenChanged($scope, function() {
+				seenYears+=1
+				if (seenYears >= 2) {
 					$scope.refreshCategories();
-				})
+					$scope.loading = false;
+				}
 			})
+			cancelNotifierPrev = LOCAL_DATA.PREVIOUS_YEAR.whenCachedAndWhenChanged($scope, function() {
+				seenYears+=1
+				if (seenYears >= 2) {
+					$scope.refreshCategories();
+					$scope.loading = false;
+				}
+			})
+
 		})
 
 	}

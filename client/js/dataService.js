@@ -1,7 +1,8 @@
 App.factory("data", [
 	"$http",
 	"$q",
-	function($http, $q) {
+	"guid",
+	function($http, $q, GUID) {
 
 		var servicesByYear = {}
 		function daysInYear(year) {
@@ -54,21 +55,162 @@ App.factory("data", [
 				watchers.forEach(function(w) {
 					if (w) w()
 				})
+				refreshCache()
 			}
 
 			var DATA = null
 			var DATAp = null
 			var ORIGINAL_DATA = null
 
+			var CACHE = {}
+			var CACHE_PROMISE = null
+			var CACHE_WATCHERS = []
+			function refreshCache() {
+				CACHE_PROMISE = null
+				cacheEverything().then(triggerCacheWatchers)
+			}
+			function triggerCacheWatchers() {
+				CACHE_WATCHERS.forEach(function(w) {
+					if (w) w()
+				})
+			}
+
+			function cacheEverything() {
+				if (!CACHE_PROMISE) {
+
+					var dataSet = { amount: 0, number: 0, transactions: [], dailyAmounts: [], budgets: [], dailyBudgetAmounts: [] }
+
+					CACHE_PROMISE = loadData().then(function() {
+						CACHE = {}
+
+						CACHE.accountData = {
+							initialValueForYear: 0
+						}
+						CACHE.accountsById = {}
+						DATA.accounts.forEach(function(a) {
+							// id not done yet and this would copy all the transactions (maybe we want that?)
+							//CACHE.accountsById[a.id] = a
+							CACHE.accountData.initialValueForYear += a.openingBalance 
+						})
+
+
+						CACHE.aggregateData = {
+							ALL: angular.copy(dataSet),
+							CATEGORISED: angular.copy(dataSet),
+							UNCATEGORISED: angular.copy(dataSet),
+						}
+
+						CACHE.categories = Object.keys(DATA.categories).sort(function(A, B) { return A.toLowerCase().localeCompare(B.toLowerCase()) })
+
+						CACHE.categoryData = {}
+						CACHE.categories.forEach(function(cat) {
+							CACHE.categoryData[cat] = angular.copy(dataSet)
+							var data = CACHE.categoryData[cat]
+							data.labels = Object.keys(DATA.categories[cat]).sort(function(A, B) { return A.toLowerCase().localeCompare(B.toLowerCase()) })
+							data.labelData = {}
+
+
+							angular.forEach(DATA.categories[cat], function(labelInfo, label) {
+								data.labelData[label] = angular.copy(dataSet)
+							})
+						})
+
+						return service.getAllTransactions().then(function(transactions) {
+							transactions.forEach(function(t) {
+								CACHE.aggregateData.ALL.amount += t.amount
+								CACHE.aggregateData.ALL.number += 1
+								CACHE.aggregateData.ALL.transactions.push(t)
+								if (t.category === null) {
+									CACHE.aggregateData.UNCATEGORISED.amount += t.amount
+									CACHE.aggregateData.UNCATEGORISED.number += 1
+									CACHE.aggregateData.UNCATEGORISED.transactions.push(t)
+								} else {
+									CACHE.aggregateData.CATEGORISED.amount += t.amount
+									CACHE.aggregateData.CATEGORISED.number += 1
+									CACHE.aggregateData.CATEGORISED.transactions.push(t)
+									CACHE.categoryData[t.category].amount += t.amount
+									CACHE.categoryData[t.category].number += 1
+									CACHE.categoryData[t.category].transactions.push(t)
+								}
+								if (t.label !== null) {
+									CACHE.categoryData[t.category].labelData[t.label].amount += t.amount
+									CACHE.categoryData[t.category].labelData[t.label].number += 1
+									CACHE.categoryData[t.category].labelData[t.label].transactions.push(t)
+								}
+							})
+						}).then(function() {
+							CACHE.budgetsById = DATA.budgets
+
+							angular.forEach(DATA.budgets, function(b) {
+
+								if (b.category) {
+									if (!(b.category in CACHE.categoryData)) return
+								}
+								if (b.label) {
+									if (!b.category || !(b.label in CACHE.categoryData[b.category].labelData)) return
+								}
+
+
+								CACHE.aggregateData.ALL.budgets.push(b)
+								if (b.category) {
+									CACHE.aggregateData.CATEGORISED.budgets.push(b)
+									CACHE.categoryData[b.category].budgets.push(b)
+									if (b.label) {
+										CACHE.categoryData[b.category].labelData[b.label].budgets.push(b)
+									}
+								}
+								
+							})
+						}).then(function() {
+
+							CACHE.activeCategories = CACHE.categories.filter(function(cat) {
+								return CACHE.categoryData[cat].number > 0
+							})
+							CACHE.categories.forEach(function(cat) {
+								var data = CACHE.categoryData[cat]
+								data.activeLabels = data.labels.filter(function(label) {
+									return data.labelData[label].number > 0
+								})
+							})
+
+						}).then(function() {
+
+							CACHE.aggregateData.ALL.dailyAmounts = amountsByDayForTransactions(CURRENT_YEAR, CACHE.aggregateData.ALL.transactions) 
+							CACHE.aggregateData.CATEGORISED.dailyAmounts = amountsByDayForTransactions(CURRENT_YEAR, CACHE.aggregateData.CATEGORISED.transactions) 
+							CACHE.aggregateData.UNCATEGORISED.dailyAmounts = amountsByDayForTransactions(CURRENT_YEAR, CACHE.aggregateData.UNCATEGORISED.transactions) 
+
+							CACHE.activeCategories.forEach(function(cat) {
+								var data = CACHE.categoryData[cat]
+								data.dailyAmounts = amountsByDayForTransactions(CURRENT_YEAR, data.transactions) 
+								data.activeLabels.forEach(function(label) {
+									data.labelData[label].dailyAmounts = amountsByDayForTransactions(CURRENT_YEAR, data.labelData[label].transactions) 
+								})
+							})
+							 
+						}).then(function() {
+							CACHE = angular.copy(CACHE)
+							CACHE.warm = true
+						})
+
+					})
+				}
+				return CACHE_PROMISE
+			}
+
 			function loadData() {
 				if (!DATAp) {
-					DATAp = $http.get("/server/data/"+CURRENT_YEAR+".json").then(function(response) {
-						DATA = angular.copy(response.data)
-						ORIGINAL_DATA = angular.copy(response.data)
-					}, function() {
-						DATA = { accounts:[], categories:{} }
-						ORIGINAL_DATA = { accounts:[], categories:{} }
-					})
+					DATAp = $http.get("/server/data/"+CURRENT_YEAR+".json")
+						.then(function(response) {
+							DATA = angular.copy(response.data)
+						}, function() {
+							DATA = { accounts:[], categories:{}, budgets: {} }
+						})
+						.finally(function() {
+							if (!("budgets" in DATA)) {
+								DATA.budgets = {}
+							}
+							ORIGINAL_DATA = angular.copy(DATA)
+						})
 				}
 				return DATAp
 			}
@@ -76,6 +218,15 @@ App.factory("data", [
 				return function() {
 					var calleeArgs = arguments
 					return loadData().then(function() { return func.apply(null, calleeArgs) })
+				}
+			}
+			function ifCached(func) {
+				return function() {
+					if (CACHE.warm) {
+						var calleeArgs = arguments
+						return func.apply(null, calleeArgs)
+					}
+					throw "Data caches not ready. Tried to call synchronous method when data not ready."
 				}
 			}
 
@@ -218,6 +369,21 @@ App.factory("data", [
 			}
 
 			var service = {
+
+				whenCachedAndWhenChanged: function(scope, cb) {
+					var currentLength = CACHE_WATCHERS.length
+					CACHE_WATCHERS.push(cb)
+					scope.$on("$destroy", function() {
+						CACHE_WATCHERS[currentLength] = null
+					})
+					
+					cacheEverything().then(cb)
+
+					return function() {
+						CACHE_WATCHERS[currentLength] = null
+					}
+				},
+
 				nowAndWhenChanged: function(scope, cb) {
 					var currentLength = watchers.length
 					watchers.push(cb)
@@ -244,6 +410,89 @@ App.factory("data", [
 						return CURRENT_YEAR
 					}
 				},
+
+				initialValueForYear: ifCached(function() {
+					return CACHE.accountData.initialValueForYear
+				}),
+				categories: ifCached(function() {
+					return CACHE.categories
+				}),
+				activeCategories: ifCached(function() {
+					return CACHE.activeCategories
+				}),
+				labelsForCategory: ifCached(function(category) {
+					return CACHE.categoryData[category].labels
+				}),
+				activeLabelsForCategory: ifCached(function(category) {
+					return CACHE.categoryData[category].activeLabels
+				}),
+				totalForCategory: ifCached(function(category) {
+					return CACHE.categoryData[category].amount
+				}),
+				totalForLabel: ifCached(function(category, label) {
+					return CACHE.categoryData[category].labelData[label].amount
+				}),
+				totalForAll: ifCached(function(category) {
+					return CACHE.aggregateData.ALL.amount
+				}),
+				totalForCategorised: ifCached(function(category) {
+					return CACHE.aggregateData.CATEGORISED.amount
+				}),
+				totalForUncategorised: ifCached(function(category) {
+					return CACHE.aggregateData.UNCATEGORISED.amount
+				}),
+				transactionsForCategoryAndLabel: ifCached(function(category, label) {
+					if (label === null) {
+						return (CACHE.categoryData[category] && CACHE.categoryData[category].transactions) || []
+					}
+					return (CACHE.categoryData[category] && CACHE.categoryData[category].labelData[label] && CACHE.categoryData[category].labelData[label].transactions) || []
+				}),
+				transactionsForAll: ifCached(function(category) {
+					return CACHE.aggregateData.ALL.transactions
+				}),
+				transactionsForCategorised: ifCached(function(category) {
+					return CACHE.aggregateData.CATEGORISED.transactions
+				}),
+				transactionsForUncategorised: ifCached(function(category) {
+					return CACHE.aggregateData.UNCATEGORISED.transactions
+				}),
+				dailyAmountsForCategoryAndLabel: ifCached(function(category, label) {
+					if (label === null) {
+						return (CACHE.categoryData[category] && CACHE.categoryData[category].dailyAmounts) || amountsByDayForTransactions(CURRENT_YEAR, [])
+					}
+					return (CACHE.categoryData[category] && CACHE.categoryData[category].labelData[label] && CACHE.categoryData[category].labelData[label].dailyAmounts) || amountsByDayForTransactions(CURRENT_YEAR, [])
+				}),
+				dailyAmountsForAll: ifCached(function(category) {
+					return CACHE.aggregateData.ALL.dailyAmounts
+				}),
+				dailyAmountsForCategorised: ifCached(function(category) {
+					return CACHE.aggregateData.CATEGORISED.dailyAmounts
+				}),
+				dailyAmountsForUncategorised: ifCached(function(category) {
+					return CACHE.aggregateData.UNCATEGORISED.dailyAmounts
+				}),
+
+				budgetById: ifCached(function(id) {
+					return CACHE.budgetsById[id]
+				}),
+				budgetsForCategoryAndLabel: ifCached(function(category, label) {
+					if (label === null) {
+						return (CACHE.categoryData[category] && CACHE.categoryData[category].budgets) || amountsByDayForTransactions(CURRENT_YEAR, [])
+					}
+					return (CACHE.categoryData[category] && CACHE.categoryData[category].labelData[label] && CACHE.categoryData[category].labelData[label].budgets) || amountsByDayForTransactions(CURRENT_YEAR, [])
+				}),
+				budgetsForAll: ifCached(function(category) {
+					return CACHE.aggregateData.ALL.budgets
+				}),
+				budgetsForCategorised: ifCached(function(category) {
+					return CACHE.aggregateData.CATEGORISED.budgets
+				}),
+				budgetsForUncategorised: ifCached(function(category) {
+					return CACHE.aggregateData.UNCATEGORISED.budgets
+				}),
+
+
+
 				getAllAccountData: whenLoaded(function() {
 					return angular.copy(DATA.accounts)
 				}),
@@ -321,7 +570,7 @@ App.factory("data", [
 					var validations = [], anError = false, arrInsert = []
 					arrNewData.forEach(function(newData) {
 						arrInsert.push({
-							id: moment().format("x")+"-"+Math.floor(10000*Math.random()),
+							id: GUID.generate(),
 							imported: newData.imported,
 							reconciled: newData.reconciled,
 							dupe: newData.dupe,
@@ -643,6 +892,15 @@ App.factory("data", [
 					DATA.categories[category][label].budgets = angular.copy(budgets)
 					triggerWatchers()
 				}),
+				setBudget: whenLoaded(function(budget, category, label) {
+					// todo: add budget validation
+					DATA.budgets[budget.id] = angular.copy(budget)
+					triggerWatchers()
+				}),
+				deleteBudgetById: whenLoaded(function(id) {
+					delete DATA.budgets[id]
+					triggerWatchers()
+				}), 
 				getCategoryLabelBudgets: whenLoaded(function(category, label) {
 					if (!DATA.categories[category]) {
 						return $q.reject("CATEGORY_NOT_FOUND")

@@ -31,10 +31,14 @@ App.directive("budgetForm", function() {
 
 
 	var vanillaBudget = {
-		type: "dates",
-		day: 30,
-		month: 2,
-		value: 12
+		type: "weekly",
+		startday: 1,
+		startmonth: 1,
+		endday: 31,
+		endmonth: 12,
+		every: 1,
+		days: [0,0,0,0,0,1,0],
+		value: 1000
 	}
 
 	function sanitiseIsOneOf(obj, key, values, defaultVar) {
@@ -43,7 +47,7 @@ App.directive("budgetForm", function() {
 		}
 	}
 	function sanitiseValue(obj) {
-		if (!Number.isInteger(obj.value) || obj.value < 0) {
+		if (!Number.isInteger(obj.value)) {
 			obj.value = 0
 		}
 	}
@@ -75,7 +79,7 @@ App.directive("budgetForm", function() {
 				budget.every = 1
 			}
 			if (!Array.isArray(budget.days) || budget.days.length != 7) {
-				budget.days = [0,0,0,0,0,0,0]
+				budget.days = [1,0,0,0,0,0,0]
 			}
 			budget.days = budget.days.map(function(d) { return Number(d) })
 		} else if (budget.type === "monthly") {
@@ -108,7 +112,8 @@ App.directive("budgetForm", function() {
 		controller: [ 
 			"$scope",
 			"budget",
-			function($scope, BUDGET) {
+			"guid",
+			function($scope, BUDGET, GUID) {
 
 				// setup mode
 				$scope.mode = $scope.budget ? "EDIT" : "NEW"
@@ -120,20 +125,30 @@ App.directive("budgetForm", function() {
 				$scope.monthlySubTypes = monthlySubTypes
 				$scope.monthlyWhat = monthlyWhat
 
+
 				if ($scope.mode === "NEW") {
 					$scope.b = angular.copy(vanillaBudget)
+					$scope.b.id = GUID.generate()
 				} else {
 					$scope.b = angular.copy($scope.budget)
 				}
 
 				$scope.validateType = function() {
 					sanitiseBudget($scope.b, $scope.year)
-					console.log(angular.copy($scope.b))
 				}
 				$scope.validateType()
 
+				$scope.summary = null
+				$scope.budgetAmounts = null
 				$scope.$watch(function() {
-					$scope.summary = BUDGET.descriptionForBudget($scope.b)
+					var summary =  BUDGET.descriptionForBudget($scope.b)
+					if (!angular.equals($scope.summary, summary)) {
+						$scope.summary = summary
+					}
+					var budgetAmounts = BUDGET.totalDailyAmountsForYear([$scope.b], $scope.year)
+					if (!angular.equals($scope.budgetAmounts, budgetAmounts)) {
+						$scope.budgetAmounts = budgetAmounts 
+					}
 				})
 
 			}
@@ -188,7 +203,7 @@ App.directive("dayMonth", function() {
 						$scope.day = $scope.days[$scope.month-1].length
 					}
 				}
-			}
+ 			}
 		]
 
 	}

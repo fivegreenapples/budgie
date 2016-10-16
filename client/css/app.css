@@ -15,6 +15,7 @@ budget-graph {
 	display:block;
 	margin-top:1em;
 	text-align:center;
+	width:100%;
 }
 #header {
 	position:fixed;
