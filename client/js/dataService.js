@@ -78,119 +78,218 @@ App.factory("data", [
 			function cacheEverything() {
 				if (!CACHE_PROMISE) {
 
-					var dataSet = { amount: 0, number: 0, transactions: [], dailyAmounts: [], budgets: [], dailyBudgetAmounts: [] }
 
 					CACHE_PROMISE = loadData().then(function() {
+
+						if (angular.equals(DATA.cats, {})) {
+							angular.forEach(DATA.categories, function(_, cat) {
+								let id = GUID.generate()
+								DATA.cats[id] = {
+									id: id,
+									name: cat,
+									type: "expense"
+								}
+							})
+							triggerWatchers()
+						}
+						if (angular.equals(DATA.labels, {})) {
+							angular.forEach(DATA.categories, (catInfo) => {
+								angular.forEach(catInfo, (labelInfo, label) => {
+									let id = GUID.generate()
+									DATA.labels[id] = {
+										id: id,
+										name: label,
+										matchers: labelInfo.matchers
+									}
+								})
+							})
+							triggerWatchers()
+						}
+						function categoryToId(category) {
+							for(let id in DATA.cats) {
+								if (category == DATA.cats[id].name) return id
+							}
+							return null
+						}
+						function labelToId(label) {
+							for(let id in DATA.labels) {
+								if (label == DATA.labels[id].name) return id
+							}
+							return null
+						}
+						if (angular.equals(DATA.accs, {})) {
+							DATA.transactions = {}
+							DATA.accounts.forEach( acc => {
+								let accId = GUID.generate()
+								DATA.accs[accId] = {
+									id: accId,
+									shortName: acc.shortName,
+									fullName: acc.fullName,
+									openingBalance: acc.openingBalance,
+									type: acc.type,
+								}
+
+								acc.transactions.forEach( t => {
+									DATA.transactions[t.id] = {
+										id: t.id,
+										accountId: accId,
+										imported: t.imported,
+										date: t.date,
+										bankDescription: t.bankDescription,
+										autoLabelId: t.autoCategorisation ? labelToId(t.autoCategorisation[1]) : null,
+										autoCategoryId: t.autoCategorisation ? categoryToId(t.autoCategorisation[0]) : null,
+										originalAmount: t.originalAmount,
+										entries: t.entries.map( e => {
+											return {
+												id: GUID.generate(),
+												parentTransaction: t.id,
+												account: accId, 
+												amount: e.amount,
+												description: e.description,
+												labelId: e.categorisation ? labelToId(e.categorisation[1]) : null,
+												categoryId: e.categorisation ? categoryToId(e.categorisation[0]) : null,
+											}
+										}),
+									}
+								})
+							})
+							triggerWatchers()
+						}
+
 						CACHE = {}
+						CACHE.accountsById = angular.copy(DATA.accs)
+						CACHE.categoriesById = angular.copy(DATA.cats)
+						CACHE.labelsById = angular.copy(DATA.labels)
+						CACHE.transactionsById = angular.copy(DATA.transactions)
+						CACHE.budgetsById = angular.copy(DATA.budgets)
+						CACHE.entriesById = {}
+						angular.forEach(CACHE.transactionsById, (t) => {
+							t.entries.forEach(e => {
+								CACHE.entriesById[e.id] = {
+									id: e.id,
+									date: t.date,
+									parentTransaction: e.parentTransaction,
+									account: e.account,
+									amount: e.amount,
+									description: e.description ? e.description : t.bankDescription,
+									labelId: e.labelId ? e.labelId : (t.autoLabelId ? t.autoLabelId : null),
+									categoryId: e.categoryId ? e.categoryId : (t.autoCategoryId ? t.autoCategoryId : null),
+								}
+								CACHE.entriesById[e.id].label = CACHE.entriesById[e.id].labelId ? CACHE.labelsById[CACHE.entriesById[e.id].labelId].name : null
+								CACHE.entriesById[e.id].category = CACHE.entriesById[e.id].categoryId ? CACHE.categoriesById[CACHE.entriesById[e.id].categoryId].name : null
+							})
+						})
 
 						CACHE.accountData = {
 							initialValueForYear: 0
 						}
-						CACHE.accountsById = {}
-						DATA.accounts.forEach(function(a) {
-							// id not done yet and this would copy all the transactions (maybe we want that?)
-							//CACHE.accountsById[a.id] = a
+
+						const DATA_SET = { amount: 0, number: 0, entries: [], dailyAmounts: [], budgets: [], matchers: [] }
+
+						CACHE.aggregateData = {
+							ALL: angular.copy(DATA_SET),
+							UNMATCHED: angular.copy(DATA_SET),
+							UNCATEGORISED: angular.copy(DATA_SET),
+							CATEGORISED: angular.copy(DATA_SET),
+						}
+
+
+						angular.forEach(CACHE.accountsById, a => {
 							CACHE.accountData.initialValueForYear += a.openingBalance 
 						})
 
+						CACHE.allCategories = Object.keys(CACHE.categoriesById)
+							.map( catId => CACHE.categoriesById[catId] )
+							.sort( (A, B) => A.name.toLowerCase().localeCompare(B.name.toLowerCase()) )
+						CACHE.categories = CACHE.allCategories.map( cat => cat.name )
 
-						CACHE.aggregateData = {
-							ALL: angular.copy(dataSet),
-							CATEGORISED: angular.copy(dataSet),
-							UNCATEGORISED: angular.copy(dataSet),
+
+						// angular.forEach(DATA.cats, function(catInfo, catId) {
+						// 	angular.extend(catInfo, DATA_SET)
+						// 	CACHE.categoryData[catInfo.name] = angular.copy(DATA_SET)
+						// 	var data = CACHE.categoryData[catInfo.name]
+						// 	data.labels = Object.keys(DATA.categories[catInfo.name]).sort(function(A, B) { return A.toLowerCase().localeCompare(B.toLowerCase()) })
+						// 	data.labelData = {}
+
+
+						// 	angular.forEach(DATA.categories[catInfo.name], function(labelInfo, label) {
+						// 		data.labelData[label] = angular.copy(DATA_SET)
+
+						// 		var labelData = data.labelData[label]
+
+						// 		Array.prototype.push.apply(CACHE.aggregateData.ALL.matchers, labelInfo.matchers)
+						// 		Array.prototype.push.apply(CACHE.aggregateData.CATEGORISED.matchers, labelInfo.matchers)
+						// 		Array.prototype.push.apply(data.matchers, labelInfo.matchers)
+						// 		Array.prototype.push.apply(labelData.matchers, labelInfo.matchers)
+
+						// 	})
+						// })
+
+						angular.forEach(CACHE.entriesById, e => {
+							CACHE.aggregateData.ALL.amount += e.amount
+							CACHE.aggregateData.ALL.number += 1
+							CACHE.aggregateData.ALL.entries.push(e)
+							if (e.categoryId === null) {
+								CACHE.aggregateData.UNCATEGORISED.amount += e.amount
+								CACHE.aggregateData.UNCATEGORISED.number += 1
+								CACHE.aggregateData.UNCATEGORISED.entries.push(e)
+							}
+							if (e.categoryId === null && e.labelId === null) {
+								CACHE.aggregateData.UNMATCHED.amount += e.amount
+								CACHE.aggregateData.UNMATCHED.number += 1
+								CACHE.aggregateData.UNMATCHED.entries.push(e)
+							}
+							if (e.categoryId !== null) {
+								CACHE.aggregateData.CATEGORISED.amount += e.amount
+								CACHE.aggregateData.CATEGORISED.number += 1
+								CACHE.aggregateData.CATEGORISED.entries.push(e)
+								CACHE.categoriesById[e.categoryId].amount += e.amount
+								CACHE.categoriesById[e.categoryId].number += 1
+								CACHE.categoriesById[e.categoryId].entries.push(e)
+							}
+							if (e.labelId !== null) {
+								CACHE.labelsById[e.labelId].amount += e.amount
+								CACHE.labelsById[e.labelId].number += 1
+								CACHE.labelsById[e.labelId].entries.push(e)
+							}
+							if (e.categoryId !== null && e.labelId !== null) {
+								CACHE.categoriesById[e.categoryId].labelData[e.labelId].amount += e.amount
+								CACHE.categoriesById[e.categoryId].labelData[e.labelId].number += 1
+								CACHE.categoriesById[e.categoryId].labelData[e.labelId].entries.push(e)
+							}
+						})
+						angular.forEach(CACHE.budgetsById, function(b) {
+
+							CACHE.aggregateData.ALL.budgets.push(b)
+							CACHE.aggregateData.CATEGORISED.budgets.push(b)
+							CACHE.categoriesById[b.categoryId].budgets.push(b)
+							if (b.labelId !== null) {
+								CACHE.categoriesById[b.categoryId].labelData[b.labelId].budgets.push(b)
+							}
+							
+						})
+
+						CACHE.activeCategories = Object.keys(CACHE.categoriesById).filter( catId => CACHE.categoriesById[catId].number > 0 )
+						for (let catId in CACHE.categoriesById) {
+							let data = CACHE.categoriesById[catId]
+							data.activeLabels = Object.keys(data.labelData).filter( labelId => data.labelData[labelId].number > 0)
 						}
 
-						CACHE.categories = Object.keys(DATA.categories).sort(function(A, B) { return A.toLowerCase().localeCompare(B.toLowerCase()) })
 
-						CACHE.categoryData = {}
-						CACHE.categories.forEach(function(cat) {
-							CACHE.categoryData[cat] = angular.copy(dataSet)
-							var data = CACHE.categoryData[cat]
-							data.labels = Object.keys(DATA.categories[cat]).sort(function(A, B) { return A.toLowerCase().localeCompare(B.toLowerCase()) })
-							data.labelData = {}
+						CACHE.aggregateData.ALL.dailyAmounts = amountsByDayForTransactions(CURRENT_YEAR, CACHE.aggregateData.ALL.entries) 
+						CACHE.aggregateData.CATEGORISED.dailyAmounts = amountsByDayForTransactions(CURRENT_YEAR, CACHE.aggregateData.CATEGORISED.entries) 
+						CACHE.aggregateData.UNCATEGORISED.dailyAmounts = amountsByDayForTransactions(CURRENT_YEAR, CACHE.aggregateData.UNCATEGORISED.entries) 
 
-
-							angular.forEach(DATA.categories[cat], function(labelInfo, label) {
-								data.labelData[label] = angular.copy(dataSet)
+						CACHE.activeCategories.forEach( catId => {
+							let data = CACHE.categoriesById[catId]
+							data.dailyAmounts = amountsByDayForTransactions(CURRENT_YEAR, data.entries) 
+							data.activeLabels.forEach( labelId => {
+								data.labelData[labelId].dailyAmounts = amountsByDayForTransactions(CURRENT_YEAR, data.labelData[labelId].entries) 
 							})
 						})
-
-						return service.getAllTransactions().then(function(transactions) {
-							transactions.forEach(function(t) {
-								CACHE.aggregateData.ALL.amount += t.amount
-								CACHE.aggregateData.ALL.number += 1
-								CACHE.aggregateData.ALL.transactions.push(t)
-								if (t.category === null) {
-									CACHE.aggregateData.UNCATEGORISED.amount += t.amount
-									CACHE.aggregateData.UNCATEGORISED.number += 1
-									CACHE.aggregateData.UNCATEGORISED.transactions.push(t)
-								} else {
-									CACHE.aggregateData.CATEGORISED.amount += t.amount
-									CACHE.aggregateData.CATEGORISED.number += 1
-									CACHE.aggregateData.CATEGORISED.transactions.push(t)
-									CACHE.categoryData[t.category].amount += t.amount
-									CACHE.categoryData[t.category].number += 1
-									CACHE.categoryData[t.category].transactions.push(t)
-								}
-								if (t.label !== null) {
-									CACHE.categoryData[t.category].labelData[t.label].amount += t.amount
-									CACHE.categoryData[t.category].labelData[t.label].number += 1
-									CACHE.categoryData[t.category].labelData[t.label].transactions.push(t)
-								}
-							})
-						}).then(function() {
-							CACHE.budgetsById = DATA.budgets
-
-							angular.forEach(DATA.budgets, function(b) {
-
-								if (b.category) {
-									if (!(b.category in CACHE.categoryData)) return
-								}
-								if (b.label) {
-									if (!b.category || !(b.label in CACHE.categoryData[b.category].labelData)) return
-								}
-
-
-								CACHE.aggregateData.ALL.budgets.push(b)
-								if (b.category) {
-									CACHE.aggregateData.CATEGORISED.budgets.push(b)
-									CACHE.categoryData[b.category].budgets.push(b)
-									if (b.label) {
-										CACHE.categoryData[b.category].labelData[b.label].budgets.push(b)
-									}
-								}
-								
-							})
-						}).then(function() {
-
-							CACHE.activeCategories = CACHE.categories.filter(function(cat) {
-								return CACHE.categoryData[cat].number > 0
-							})
-							CACHE.categories.forEach(function(cat) {
-								var data = CACHE.categoryData[cat]
-								data.activeLabels = data.labels.filter(function(label) {
-									return data.labelData[label].number > 0
-								})
-							})
-
-						}).then(function() {
-
-							CACHE.aggregateData.ALL.dailyAmounts = amountsByDayForTransactions(CURRENT_YEAR, CACHE.aggregateData.ALL.transactions) 
-							CACHE.aggregateData.CATEGORISED.dailyAmounts = amountsByDayForTransactions(CURRENT_YEAR, CACHE.aggregateData.CATEGORISED.transactions) 
-							CACHE.aggregateData.UNCATEGORISED.dailyAmounts = amountsByDayForTransactions(CURRENT_YEAR, CACHE.aggregateData.UNCATEGORISED.transactions) 
-
-							CACHE.activeCategories.forEach(function(cat) {
-								var data = CACHE.categoryData[cat]
-								data.dailyAmounts = amountsByDayForTransactions(CURRENT_YEAR, data.transactions) 
-								data.activeLabels.forEach(function(label) {
-									data.labelData[label].dailyAmounts = amountsByDayForTransactions(CURRENT_YEAR, data.labelData[label].transactions) 
-								})
-							})
 							 
-						}).then(function() {
-							CACHE = angular.copy(CACHE)
-							CACHE.warm = true
-						})
+						CACHE = angular.copy(CACHE)
+						CACHE.warm = true
 
 					})
 				}
@@ -203,11 +302,20 @@ App.factory("data", [
 						.then(function(response) {
 							DATA = angular.copy(response.data)
 						}, function() {
-							DATA = { accounts:[], categories:{}, budgets: {} }
+							DATA = { accounts:[], categories:{}, budgets: {}, cats:{} }
 						})
 						.finally(function() {
 							if (!("budgets" in DATA)) {
 								DATA.budgets = {}
+							}
+							if (!("cats" in DATA)) {
+								DATA.cats = {}
+							}
+							if (!("labels" in DATA)) {
+								DATA.labels = {}
+							}
+							if (!("accs" in DATA)) {
+								DATA.accs = {}
 							}
 							ORIGINAL_DATA = angular.copy(DATA)
 						})
@@ -414,11 +522,8 @@ App.factory("data", [
 				initialValueForYear: ifCached(function() {
 					return CACHE.accountData.initialValueForYear
 				}),
-				categories: ifCached(function() {
-					return CACHE.categories
-				}),
-				activeCategories: ifCached(function() {
-					return CACHE.activeCategories
+				allCategories: ifCached(function() {
+					return CACHE.allCategories
 				}),
 				labelsForCategory: ifCached(function(category) {
 					return CACHE.categoryData[category].labels
@@ -479,7 +584,7 @@ App.factory("data", [
 					if (label === null) {
 						return (CACHE.categoryData[category] && CACHE.categoryData[category].budgets) || amountsByDayForTransactions(CURRENT_YEAR, [])
 					}
-					return (CACHE.categoryData[category] && CACHE.categoryData[category].labelData[label] && CACHE.categoryData[category].labelData[label].budgets) || amountsByDayForTransactions(CURRENT_YEAR, [])
+					return (CACHE.categoryData[category] && CACHE.categoryData[category].labelData[label] && CACHE.categoryData[category].labelData[label].budgets) || []
 				}),
 				budgetsForAll: ifCached(function(category) {
 					return CACHE.aggregateData.ALL.budgets
@@ -489,6 +594,25 @@ App.factory("data", [
 				}),
 				budgetsForUncategorised: ifCached(function(category) {
 					return CACHE.aggregateData.UNCATEGORISED.budgets
+				}),
+
+				matcherById: ifCached(function(id) {
+					return CACHE.matchersById[id]
+				}),
+				matchersForCategoryAndLabel: ifCached(function(category, label) {
+					if (label === null) {
+						return (CACHE.categoryData[category] && CACHE.categoryData[category].matchers) || amountsByDayForTransactions(CURRENT_YEAR, [])
+					}
+					return (CACHE.categoryData[category] && CACHE.categoryData[category].labelData[label] && CACHE.categoryData[category].labelData[label].matchers) || []
+				}),
+				matchersForAll: ifCached(function(category) {
+					return CACHE.aggregateData.ALL.matchers
+				}),
+				matchersForCategorised: ifCached(function(category) {
+					return CACHE.aggregateData.CATEGORISED.matchers
+				}),
+				matchersForUncategorised: ifCached(function(category) {
+					return CACHE.aggregateData.UNCATEGORISED.matchers
 				}),
 
 

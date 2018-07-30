@@ -265,6 +265,15 @@ budget-graph {
 	white-space: nowrap;
 	text-overflow:ellipsis;
 }
+.category-details-container .column .header.section {
+	font-size:1em;
+	font-weight:400; 
+	height:1.8em;
+	line-height:1.8em;
+	margin-top:5px;
+	padding-left:5px;
+	border-left:10px solid #666;
+}
 .category-details-container .column .header i.icon {
 	position:absolute;
 	right:0.5em;
@@ -272,13 +281,10 @@ budget-graph {
 }
 .category-details-container .column .item-container {
 	position:absolute;
-	top:2.8em;
+	top:0;
 	bottom:0;
 	width:100%;
 	overflow:auto;
-}
-.category-details-container .column.details .item-container {
-	top:0em;
 }
 .category-details-container .column .spacer {
 	height:1px;
@@ -321,10 +327,16 @@ budget-graph {
 	justify-content:space-between;
 	align-items:center;
 }
+.category-details-container .column .item.label .name,
+.category-details-container .column .item.category .name {
+	overflow:hidden;
+	text-overflow: ellipsis;
+}
 .category-details-container .column .item.label .total,
 .category-details-container .column .item.category .total {
 	font-size:0.6em;
 	font-family:'Source Code Pro', Arial;
+	flex-shrink:0;
 }
 .category-details-container .column .item.label {
 	border-left:10px solid #bb7;

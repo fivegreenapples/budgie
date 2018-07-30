@@ -99,6 +99,7 @@ App.directive("budgetGraph", function() {
 							color: "slategray",
 							xValueType: "dateTime",
 							yValueFormatString: "£#,##0.00",
+							xValueFormatString: "DD MMM",
 							lineThickness: 1,
 							fillOpacity: 0.3,
 							markerType: "none",
@@ -109,6 +110,7 @@ App.directive("budgetGraph", function() {
 							color: "silver",
 							xValueType: "dateTime",
 							yValueFormatString: "£#,##0.00",
+							xValueFormatString: "DD MMM",
 							lineThickness: 1,
 							fillOpacity: 0.3,
 							markerType: "none",
@@ -121,6 +123,7 @@ App.directive("budgetGraph", function() {
 							color: "darkseagreen",
 							xValueType: "dateTime",
 							yValueFormatString: "£#,##0.00",
+							xValueFormatString: "DD MMM",
 							lineThickness: 1,
 							fillOpacity: 0.3,
 							markerType: "none",
@@ -133,6 +136,7 @@ App.directive("budgetGraph", function() {
 							color: "#4356f4",
 							xValueType: "dateTime",
 							yValueFormatString: "£#,##0.00",
+							xValueFormatString: "DD MMM",
 							dataPoints: positivePoints
 						})
 						dataSets.push({
@@ -140,6 +144,7 @@ App.directive("budgetGraph", function() {
 							color: "#f06789",
 							xValueType: "dateTime",
 							yValueFormatString: "£#,##0.00",
+							xValueFormatString: "DD MMM",
 							dataPoints: negativePoints
 						})
 					}
